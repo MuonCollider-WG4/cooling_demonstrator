@@ -1,0 +1,28 @@
+param c1=42.38*$collimation_solenoid_field
+param ncells=$n_collimation_cells
+
+coil c1 innerRadius=100 outerRadius=150 length=100 nSheets=10
+solenoid sol1 coilName=c1 current=$c1 kill=1 color=0,1,0  
+tubs sol1_aperture
+
+pillbox rf innerLength=124 frequency=0.650 maxGradient=15 \
+win1Thick=0 win1OuterRadius=0 collarThick=0 collarRadialThick=0\
+winMat=Be irisRadius=100 win2Thick=0.12 wallThick=0.4 pipeThick=0.4 \
+phaseAcc=0 kill=1
+
+tube collimator innerRadius=50 outerRadius=500 length=10 kill=1 color=0.5,0.5,0.5
+
+do i 1 $ncells
+    place collimator z=$i*1000-60
+    place sol1 z=$i*1000
+    place collimator z=$i*1000+60
+enddo
+
+do i 1 $ncells
+    place rf z=$i*1000+500-125*1.5
+    place rf z=$i*1000+500-125*0.5
+    place rf z=$i*1000+500+125*0.5
+    place rf z=$i*1000+500+125*1.5
+enddo
+
+place sol1 z=($ncells+1)*1000

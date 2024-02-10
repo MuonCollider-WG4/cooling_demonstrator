@@ -1,0 +1,137 @@
+# basic cell setup and tracking parameters
+param cell_length=2000
+param n_cells=105
+param n_precells=10
+param maxStep=10
+param output_planes_per_cell=1
+param output_cells=100
+param stochastics=1
+param disable=Decay
+param do_cooling=1
+param pi=3.1415926535
+param c_light=299.792458 // mm/ns
+param bessel_0=2.405
+
+# beam
+param beamX=-13.114746147910342
+param beamY=-2.3088398137537665
+param beamXp=0.0
+param beamYp=0.0
+param kinetic_energy=120.53575093932191
+param ref_p=200.0
+
+# magnets
+param coil_radius=400.0
+param cooling_solenoid_current=7.2*5000.0/117.252/0.361*3.0/0.898*3.001/2.839
+param sp1=1
+param sp2=-1
+param sp3=1
+param sp4=-1
+param sz_pos=0.05
+
+param cooling_dipole_field=0.2
+param dp1=1
+param dp2=-1
+param dp3=-1
+param dp4=1
+
+# rf
+param frequency=0.704 #0.704 # GHz
+param rf_phase=20
+param efield=43.82
+param iris_radius=0.75*$c_light/$frequency*$bessel_0/2/$pi
+
+# wedge
+param wedge_alignment_angle1=-90 # rotation about the beam axis; 0 means the thin edge is on the top
+param wedge_alignment_angle2=90 # rotation about the beam axis; 0 means the thin edge is on the top
+param wedge_angle=5.0 # opening angle for the wedge tip
+param wedge_thickness=34.2 # on the beam axis
+param wedge_offset_z=0.0 # offset along the beam axis
+param wedge_offset_trans=-13.114746147910342 # wedge axis transverse offset
+
+param wedge_r=$coil_radius-1
+param do_wedge=$wedge_angle>0.001||$wedge_angle<-0.001
+if $do_wedge
+    param wedge_dh=$wedge_thickness/2.0/tan(abs($wedge_angle)/2*$pi/180) # distance from tip of wedge to midplane
+    param wedge_h=$wedge_dh+$wedge_r
+    param wedge_t1=$wedge_thickness*($wedge_h/$wedge_dh) # similar triangles
+    param wedge_t0=0.005
+    param wedge_rot=90*$wedge_angle/abs($wedge_angle)
+else
+    param wedge_t1=$wedge_thickness # similar triangles
+    param wedge_t0=$wedge_thickness
+    param wedge_h=2*$wedge_r
+    param wedge_rot=90
+endif
+param wedge_z=-$wedge_r+$wedge_h/2+$wedge_offset_trans
+
+
+param mass=105.658
+param output_z_max=$cell_length*($output_cells)
+param output_z_step=$cell_length/$output_planes_per_cell
+
+physics QGSP_BIC doStochastics=$stochastics disable=$disable
+
+coil c1 innerRadius=$coil_radius outerRadius=$coil_radius+50 length=100 nSheets=10
+solenoid sol1 coilName=c1 current=$cooling_solenoid_current kill=1 color=0,1,0  
+
+trap wedge_trap height=$wedge_h length=$wedge_r*2 upperWidth=$wedge_t0 lowerWidth=$wedge_t1 material=LITHIUM_HYDRIDE color=1,0,0
+tube wedge_beampipeinner outerRadius=$wedge_r length=450.0
+boolean op=intersection wedge wedge_beampipeinner wedge_trap rotation=Y$wedge_rot y=$wedge_z material=LITHIUM_HYDRIDE
+tube wedge_marker innerRadius=$wedge_r+1 outerRadius=$wedge_r+10 length=1 color=0.6,0.5,0.0
+
+tube collimator innerRadius=$coil_radius-50.0 outerRadius=999.999 length=10 kill=1 color=0.5,0.5,0.5
+tube minus innerRadius=0 outerRadius=10 length=10 kill=1 color=0,0,1
+tube plus innerRadius=0 outerRadius=10 length=10 kill=1 color=1,0,0
+
+
+genericbend solbend fieldWidth=1000 fieldHeight=1000 fieldLength=100 \
+               ironWidth=-1 ironHeight=-1 ironLength=-1 \
+               openAperture=1 \
+               By=$cooling_dipole_field kill=1 fringe=0 ironColor=1,1,1
+
+pillbox rf innerLength=124 frequency=$frequency maxGradient=$efield phaseAcc=$rf_phase \
+win1Thick=0 win1OuterRadius=0 collarThick=0 collarRadialThick=0\
+winMat=Be irisRadius=$iris_radius win2Thick=0.12 wallThick=0.4 pipeThick=0.4 kill=1
+
+do cell_index -$n_precells $n_cells
+    place solbend z=($cell_index+0.0+$sz_pos)*$cell_length By=$cooling_dipole_field*$dp1 rename=solbend_a_$cell_index
+    place solbend z=($cell_index+0.5-$sz_pos)*$cell_length By=$cooling_dipole_field*$dp2 rename=solbend_b_$cell_index
+    place solbend z=($cell_index+0.5+$sz_pos)*$cell_length By=$cooling_dipole_field*$dp3 rename=solbend_c_$cell_index
+    place solbend z=($cell_index+1.0-$sz_pos)*$cell_length By=$cooling_dipole_field*$dp4 rename=solbend_d_$cell_index
+
+    place sol1 z=($cell_index+0.0+$sz_pos)*$cell_length current=$cooling_solenoid_current*$sp1 rename=sol_a_$cell_index
+    place sol1 z=($cell_index+0.5-$sz_pos)*$cell_length current=$cooling_solenoid_current*$sp2 rename=sol_b_$cell_index
+    place sol1 z=($cell_index+0.5+$sz_pos)*$cell_length current=$cooling_solenoid_current*$sp3 rename=sol_c_$cell_index
+    place sol1 z=($cell_index+1.0-$sz_pos)*$cell_length current=$cooling_solenoid_current*$sp4 rename=sol_d_$cell_index
+
+    place minus z=$cell_index*$cell_length x=-500 # blue
+    place plus z=$cell_index*$cell_length x=+500 # red
+enddo
+do cell_index 0 $n_cells
+    param cell_z=$cell_index*$cell_length
+    place wedge_marker z=$cell_z-$wedge_thickness/2.0 rename=wedge_marker_a_$cell_index
+    place wedge_marker z=$cell_z+$wedge_thickness/2.0 rename=wedge_marker_b_$cell_index
+    if $do_cooling
+        place wedge z=$cell_z rotation=Z$wedge_alignment_angle1 rename=wedge$cell_index
+        place rf z=$cell_z+0.3*$cell_length/2 rename=rf_a_$cell_index
+        place rf z=$cell_z+0.43*$cell_length/2 rename=rf_b_$cell_index
+        place rf z=$cell_z+0.57*$cell_length/2 rename=rf_c_$cell_index
+        place rf z=$cell_z+0.7*$cell_length/2 rename=rf_d_$cell_index
+    endif
+    param cell_z=($cell_index+0.5)*$cell_length
+    place wedge_marker z=$cell_z-$wedge_thickness/2.0 rename=wedge_marker_c_$cell_index
+    place wedge_marker z=$cell_z+$wedge_thickness/2.0 rename=wedge_marker_d_$cell_index
+    if $do_cooling
+        place wedge z=$cell_z rotation=Z$wedge_alignment_angle2 rename=wedge$cell_index
+        place rf z=$cell_z+0.3*$cell_length/2 rename=rf_e_$cell_index
+        place rf z=$cell_z+0.43*$cell_length/2 rename=rf_f_$cell_index
+        place rf z=$cell_z+0.57*$cell_length/2 rename=rf_g_$cell_index
+        place rf z=$cell_z+0.7*$cell_length/2 rename=rf_h_$cell_index
+    endif
+enddo
+
+zntuple output file=output format=FOR009.DAT zloop=0:$output_z_max:$output_z_step referenceParticle=1
+reference particle=mu+ beamZ=0.0 referenceMomentum=$ref_p beamX=$beamX beamY=$beamY beamXp=$beamXp  beamYp=$beamYp
+beam ascii file=beam.tmp beamZ=0.0 beamX=$beamX beamY=$beamY beamXp=$beamXp  beamYp=$beamYp lastEvent=10000 # user provided file with particle data
+

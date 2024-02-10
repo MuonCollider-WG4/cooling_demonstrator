@@ -1,0 +1,12 @@
+# param chicane_start
+
+param bend1=-60
+param by=0.828*200/248
+
+tube collimator2 innerRadius=50 outerRadius=500 length=10 kill=1 color=0.5,0.5,0.5
+genericsectorbend d1 angle=$bend1 fieldCenterRadius=1000 fieldInnerRadius=500 fieldOuterRadius=1500 fieldHeight=500 \
+               ironInnerRadius=100 ironOuterRadius=2000 ironHeight=1000 \
+               DipoleField=$by kill=1 fringe=0 ironColor=1,1,1
+place d1 z=$chicane_start
+cornerarc arc1 centerRadius=1000 angle=$bend1 z=$chicane_start
+place collimator2 z=$chicane_start+1500

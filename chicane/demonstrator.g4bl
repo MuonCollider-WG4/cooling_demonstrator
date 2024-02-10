@@ -1,0 +1,46 @@
+param collimation_solenoid_field=0.5
+param n_collimation_cells=4
+
+param max_z=35000
+
+############### SOLENOID CHICANE ##################
+
+param fe_small_cell_length=250
+param fe_small_coil_current=1.5/1.739859402*19.22
+param chicaneEndLen=10000.
+param pi=3.14159265
+
+param dq_deg=2.5/4.*1.6
+param dq_rad=$dq_deg/180*$pi
+param n_s=10
+param absorber_z_offset=0.0
+param dz=$fe_small_cell_length/$dq_rad*2*sin($n_s*$dq_rad)
+param beam_offset_x=-$fe_small_cell_length/$dq_rad*(2*cos($n_s*$dq_rad)-2)
+param chicaneLen=$chicaneEndLen+$dz 
+param chicaneAperture=75
+param driftAperture=75
+param chicane_offset_z=($n_collimation_cells+1)*1000
+param chicane_offset_x=(2*cos($n_s*$dq_rad)-2)*$fe_small_cell_length/($dq_rad)
+
+############### DIPOLE CHICANE ##################
+
+param chicane_start=$n_collimation_cells*1000+1500
+
+physics QGSP_BIC doStochastics=0
+reference particle=mu+ beamZ=0.0 referenceMomentum=200.0
+beam ascii file=beam.tmp beamZ=0.0 lastEvent=1000000 # user provided file with particle data
+
+fieldntuple field_on_axis z=0,$max_z,50 filename=field_map.txt format=ascii
+
+zntuple output file=output format=FOR009.DAT zloop=0:10000:100 referenceParticle=1
+
+tube marker outerRadius=100 length=10 kill=1 color=0.9,0.0,0.9
+
+do i 0 $max_z 5000 
+    place marker z=$i x=1000
+enddo
+
+include collimation.g4bl
+include demo_chicane.g4bl # multipole chicane
+#include matching.g4bl
+#include cooling.g4bl
