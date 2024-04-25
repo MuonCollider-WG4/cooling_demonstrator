@@ -1,0 +1,6 @@
+beam, particle="mu-",
+        energy=200*MeV,
+        distrType="userfile",
+        distrFile="lowemittancebeam.dat",
+        distrFileFormat = "x[mm]:xp[rad]:y[mm]:yp[rad]:z[mm]:Ek[MeV]:t[ns]",
+        nlinesIgnore=1;
