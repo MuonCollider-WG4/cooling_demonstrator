@@ -1,35 +1,40 @@
 # basic cell setup and tracking parameters
-param cell_length=2000
-param n_cells=105
+param cell_length=2000.0
+param n_cells=1010
 param n_precells=10
+param epsMax=0.01
 param maxStep=10
 param output_planes_per_cell=1
-param output_cells=100
-param stochastics=1
+param output_cells=1000
+param stochastics=0
 param disable=Decay
-param do_cooling=1
+param do_cooling=0
 param pi=3.1415926535
 param c_light=299.792458 // mm/ns
 param bessel_0=2.405
+param do_field_map=1
 
 # beam
-param beamX=-13.114746147910342
-param beamY=-2.3088398137537665
+param beamX=0.0
+param beamY=0.0
 param beamXp=0.0
 param beamYp=0.0
-param kinetic_energy=120.53575093932191
-param ref_p=200.0
+param kinetic_energy=0.12053575093932192*1e3
+param ref_p=0.2*1e3
 
 # magnets
-param coil_radius=400.0
-param cooling_solenoid_current=7.2*5000.0/117.252/0.361*3.0/0.898*3.001/2.839
+param coil_radius=250.0
+param coil_thickness=325.0
+param coil_length=100.0
+param nsheets=20
+param cooling_solenoid_current=264.5
 param sp1=1
 param sp2=-1
 param sp3=1
 param sp4=-1
-param sz_pos=0.05
+param sz_pos=0.08275
 
-param cooling_dipole_field=0.2
+param cooling_dipole_field=0.0
 param dp1=1
 param dp2=-1
 param dp3=-1
@@ -72,7 +77,7 @@ param output_z_step=$cell_length/$output_planes_per_cell
 
 physics QGSP_BIC doStochastics=$stochastics disable=$disable
 
-coil c1 innerRadius=$coil_radius outerRadius=$coil_radius+50 length=100 nSheets=10
+coil c1 innerRadius=$coil_radius outerRadius=$coil_radius+$coil_thickness length=$coil_length nSheets=$nsheets
 solenoid sol1 coilName=c1 current=$cooling_solenoid_current kill=1 color=0,1,0  
 
 trap wedge_trap height=$wedge_h length=$wedge_r*2 upperWidth=$wedge_t0 lowerWidth=$wedge_t1 material=LITHIUM_HYDRIDE color=1,0,0
@@ -133,5 +138,8 @@ enddo
 
 zntuple output file=output format=FOR009.DAT zloop=0:$output_z_max:$output_z_step referenceParticle=1
 reference particle=mu+ beamZ=0.0 referenceMomentum=$ref_p beamX=$beamX beamY=$beamY beamXp=$beamXp  beamYp=$beamYp
-beam ascii file=beam.tmp beamZ=0.0 beamX=$beamX beamY=$beamY beamXp=$beamXp  beamYp=$beamYp lastEvent=10000 # user provided file with particle data
+beam ascii file=beam.tmp beamZ=0.0 beamX=$beamX beamY=$beamY beamXp=$beamXp  beamYp=$beamYp lastEvent=1000 # user provided file with particle data
 
+if $do_field_map
+    fieldntuple field_out format=ascii filename=fieldmap.dat z=0,$cell_length,10
+endif

@@ -1,0 +1,17 @@
+Cooling demonstrator lattice
+----------------------------
+
+This repo contains the lattice files for the cooling demonstrator. Contents:
+* chicane: contains the transport line from the target through to the cooling
+           channel start
+* cooling: cooling lattice
+
+Release notes
+-------------
+
+2022-11-01-release: this is the lattice presented at NuFact. It is published at
+http://dx.doi.org/10.3390/psf2023008037
+
+2024-03-01-prerelease: just looking at solenoids; adapting the NuFact lattice to
+use a slightly more realistic solenoid geometry. See discussion here:
+https://indico.cern.ch/event/1397981/contributions/5875820/attachments/2828539/4941918/2024-03-28_rogers-demonstrator-lattice.pdf
