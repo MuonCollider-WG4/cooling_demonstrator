@@ -15,3 +15,7 @@ http://dx.doi.org/10.3390/psf2023008037
 2024-03-01-prerelease: just looking at solenoids; adapting the NuFact lattice to
 use a slightly more realistic solenoid geometry. See discussion here:
 https://indico.cern.ch/event/1397981/contributions/5875820/attachments/2828539/4941918/2024-03-28_rogers-demonstrator-lattice.pdf
+
+2024-04-16-prerelease: just looking at solenoids; scaling the lattice to 0.8 m
+cell length to better fit the RF cavities. See discussion here:
+https://indico.cern.ch/event/1408162/contributions/5918375/attachments/2845045/4974235/2024-04-25_rogers-demonstrator-lattice.pdf
