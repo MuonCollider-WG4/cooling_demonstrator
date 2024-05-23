@@ -1,0 +1,165 @@
+# basic cell setup and tracking parameters
+param cell_length=1600.0
+param n_cells=210
+param n_precells=10
+param output_planes_per_cell=1
+param output_cells=200
+param stochastics=1
+param disable=Decay
+param do_cooling=1
+param pi=3.1415926535
+param c_light=299.792458 # mm/ns
+param bessel_0=2.405
+param do_field_map=1
+
+# stepping parameters
+param epsMax=0.01
+param maxStep=10
+param eventTimeLimit=300
+
+# beam
+param beamX=0.0
+param beamY=0.0
+param beamXp=0.0
+param beamYp=0.0
+param kinetic_energy=0.12053575093932192*1e3
+param ref_p=0.2*1e3
+
+# solenoids
+param coil_radius=250.0
+param coil_thickness=169.33457396636425
+param coil_length=140.0
+param coil_tolerance=0.001
+param exact_computation=0
+param max_z=10000.0
+param nsheets=20
+param cooling_solenoid_current=500.0
+param sp1=1
+param sp2=-1
+param sp3=1
+param sp4=-1
+param sz_pos=0.06292907877194552
+
+# dipoles
+param cooling_dipole_field=0.2
+param dp_pos=0.1
+param dp_length=100
+param dp1=1
+param dp2=-1
+param dp3=-1
+param dp4=1
+
+# rf
+param frequency=0.704 # GHz
+param rf_phase=20.0 # degree
+param efield=30.0 # MV/m
+param iris_radius=0.5*$c_light/$frequency*$bessel_0/2/$pi
+param rf_length=188.56 # mm
+param window_thickness=0.1+1e-9 # mm, must be > 0 (hence 1e-9 thickness)
+param wall_thickness=0.4 # mm
+param n_rf_cavities=3
+param rf_separation=5
+
+# wedge
+param wedge_alignment_angle1=-90 # rotation about the beam axis; 0 means the thin edge is on the top
+param wedge_alignment_angle2=90 # rotation about the beam axis; 0 means the thin edge is on the top
+param wedge_angle=10.0 # opening angle for the wedge tip
+param wedge_thickness=20.0 # on the beam axis
+param wedge_offset_z=0.0 # offset along the beam axis
+param wedge_offset_trans=0 # wedge axis transverse offset
+param wedge_material=LITHIUM_HYDRIDE
+param wedge_window_thickness = 0.0
+
+param wedge_r=$coil_radius-1
+param do_wedge=$wedge_angle>0.001||$wedge_angle<-0.001
+if $do_wedge
+    param wedge_dh=$wedge_thickness/2.0/tan(abs($wedge_angle)/2*$pi/180) # distance from tip of wedge to midplane
+    param wedge_h=$wedge_dh+$wedge_r
+    param wedge_t1=$wedge_thickness*($wedge_h/$wedge_dh) # similar triangles
+    param wedge_t0=0.005
+    param wedge_rot=90*$wedge_angle/abs($wedge_angle)
+else
+    param wedge_t1=$wedge_thickness # similar triangles
+    param wedge_t0=$wedge_thickness
+    param wedge_h=2*$wedge_r
+    param wedge_rot=90
+endif
+param wedge_z=-$wedge_r+$wedge_h/2+$wedge_offset_trans
+
+
+param mass=105.658
+param output_z_max=$cell_length*($output_cells)
+param output_z_step=$cell_length/$output_planes_per_cell
+
+physics QGSP_BIC doStochastics=$stochastics disable=$disable
+
+coil c1 innerRadius=$coil_radius outerRadius=$coil_radius+$coil_thickness length=$coil_length \
+        nSheets=$nsheets tolerance=$coil_tolerance maxZ=$max_z exactComputation=$exact_computation
+solenoid sol1 coilName=c1 current=$cooling_solenoid_current kill=1 color=0,1,0  
+
+trap wedge_trap height=$wedge_h length=$wedge_r*2 upperWidth=$wedge_t0 lowerWidth=$wedge_t1 material=$wedge_material color=1,0,0
+tube wedge_beampipeinner outerRadius=$wedge_r length=450.0
+boolean op=intersection wedge wedge_beampipeinner wedge_trap rotation=Y$wedge_rot y=$wedge_z material=$wedge_material
+tube wedge_marker innerRadius=$wedge_r+1 outerRadius=$wedge_r+10 length=1 color=0.6,0.5,0.0
+
+tube collimator innerRadius=$coil_radius-50.0 outerRadius=999.999 length=10 kill=1 color=0.5,0.5,0.5
+tube minus innerRadius=0 outerRadius=10 length=10 kill=1 color=0,0,1
+tube plus innerRadius=0 outerRadius=10 length=10 kill=1 color=1,0,0
+
+genericbend solbend fieldWidth=1000 fieldHeight=1000 fieldLength=$dp_length \
+               ironWidth=-1 ironHeight=-1 ironLength=-1 \
+               openAperture=1 \
+               By=$cooling_dipole_field kill=1 fringe=0 ironColor=1,1,1
+
+param rf_spacing=$rf_length+$wall_thickness*2+$window_thickness+$rf_separation
+pillbox rf innerLength=$rf_length frequency=$frequency maxGradient=$efield phaseAcc=$rf_phase \
+win1Thick=0.0 win1OuterRadius=$iris_radius collarThick=0 collarRadialThick=0\
+winMat=Be irisRadius=$iris_radius+1e-6 win2Thick=0.0 wallThick=$wall_thickness pipeThick=$wall_thickness kill=1
+tube rf_window outerRadius=$iris_radius length=$window_thickness material=Be
+
+do cell_index -$n_precells $n_cells
+    place solbend z=($cell_index+0.0+$dp_pos)*$cell_length By=$cooling_dipole_field*$dp1 rename=solbend_$cell_index.1
+    place solbend z=($cell_index+0.5-$dp_pos)*$cell_length By=$cooling_dipole_field*$dp2 rename=solbend_$cell_index.2
+    place solbend z=($cell_index+0.5+$dp_pos)*$cell_length By=$cooling_dipole_field*$dp3 rename=solbend_$cell_index.3
+    place solbend z=($cell_index+1.0-$dp_pos)*$cell_length By=$cooling_dipole_field*$dp4 rename=solbend_$cell_index.4
+
+    place sol1 z=($cell_index+0.0+$sz_pos)*$cell_length current=$cooling_solenoid_current*$sp1 rename=sol_$cell_index.1
+    place sol1 z=($cell_index+0.5-$sz_pos)*$cell_length current=$cooling_solenoid_current*$sp2 rename=sol_$cell_index.2
+    place sol1 z=($cell_index+0.5+$sz_pos)*$cell_length current=$cooling_solenoid_current*$sp3 rename=sol_$cell_index.3
+    place sol1 z=($cell_index+1.0-$sz_pos)*$cell_length current=$cooling_solenoid_current*$sp4 rename=sol_$cell_index.4
+
+    place minus z=$cell_index*$cell_length x=-500 # blue
+    place plus z=$cell_index*$cell_length x=+500 # red
+enddo
+do cell_index 0 $n_cells
+    param cell_z=$cell_index*$cell_length
+    place wedge_marker z=$cell_z-$wedge_thickness/2.0 rename=wedge_marker_a_$cell_index
+    place wedge_marker z=$cell_z+$wedge_thickness/2.0 rename=wedge_marker_b_$cell_index
+    if $do_cooling
+        place wedge z=$cell_z rotation=Z$wedge_alignment_angle1 rename=wedge$cell_index
+        do rf_index 1 $n_rf_cavities
+            place rf z=$cell_z+$cell_length/4+($rf_index-0.5-$n_rf_cavities/2)*$rf_spacing rename=rf_$cell_index.$rf_index
+            place rf_window z=$cell_z+$cell_length/4+($rf_index-1.0-$n_rf_cavities/2)*$rf_spacing rename=rf_window_$cell_index.$rf_index
+        enddo
+        place rf_window z=$cell_z+$cell_length/4+$n_rf_cavities/2*$rf_spacing rename=rf_window_$cell_index.$rf_index
+    endif
+    param cell_z=($cell_index+0.5)*$cell_length
+    place wedge_marker z=$cell_z-$wedge_thickness/2.0 rename=wedge_marker_c_$cell_index
+    place wedge_marker z=$cell_z+$wedge_thickness/2.0 rename=wedge_marker_d_$cell_index
+    if $do_cooling
+        place wedge z=$cell_z rotation=Z$wedge_alignment_angle2 rename=wedge$cell_index
+        do rf_index 1 $n_rf_cavities
+            place rf z=$cell_z+$cell_length/4+($rf_index-0.5-$n_rf_cavities/2)*$rf_spacing rename=rf_b_$cell_index.$rf_index
+            place rf_window z=$cell_z+$cell_length/4+($rf_index-1.0-$n_rf_cavities/2)*$rf_spacing rename=rf_window_b_$cell_index.$rf_index
+        enddo
+        place rf_window z=$cell_z+$cell_length/4+$n_rf_cavities/2*$rf_spacing rename=rf_window_b_$cell_index.$rf_index
+    endif
+enddo
+
+zntuple output file=output format=FOR009.DAT zloop=0:$output_z_max:$output_z_step referenceParticle=1
+reference particle=mu+ beamZ=0.0 referenceMomentum=$ref_p beamX=$beamX beamY=$beamY beamXp=$beamXp  beamYp=$beamYp noEfield=1 noEloss=1
+beam ascii file=beam.tmp beamZ=0.0 beamX=$beamX beamY=$beamY beamXp=$beamXp  beamYp=$beamYp lastEvent=100 # user provided file with particle data
+
+if $do_field_map
+    fieldntuple field_out format=ascii filename=fieldmap.dat z=0,$cell_length,10
+endif
