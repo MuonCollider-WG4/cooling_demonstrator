@@ -158,7 +158,7 @@ enddo
 
 zntuple output file=output format=FOR009.DAT zloop=0:$output_z_max:$output_z_step referenceParticle=1
 reference particle=mu+ beamZ=0.0 referenceMomentum=$ref_p beamX=$beamX beamY=$beamY beamXp=$beamXp  beamYp=$beamYp noEfield=1 noEloss=1
-beam ascii file=beam.tmp beamZ=0.0 beamX=$beamX beamY=$beamY beamXp=$beamXp  beamYp=$beamYp # user provided file with particle data
+beam ascii file=beam.tmp beamZ=0.0 beamX=$beamX beamY=$beamY beamXp=$beamXp  beamYp=$beamYp lastEvent=100 # user provided file with particle data
 
 if $do_field_map
     fieldntuple field_out format=ascii filename=fieldmap.dat z=0,$cell_length,10
