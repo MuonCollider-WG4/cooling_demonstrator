@@ -9,17 +9,23 @@ This repo contains the lattice files for the cooling demonstrator. Contents:
 Release notes
 -------------
 
-2022-11-01-release: this is the lattice presented at NuFact. It is published at
-http://dx.doi.org/10.3390/psf2023008037
-
-2024-03-01-prerelease: just looking at solenoids; adapting the NuFact lattice to
-use a slightly more realistic solenoid geometry. See discussion here:
-https://indico.cern.ch/event/1397981/contributions/5875820/attachments/2828539/4941918/2024-03-28_rogers-demonstrator-lattice.pdf
+2024-05-23-prerelease:
+optimised the cooling cell lattice, including absorber thickness, window thickness, RF iris radius, RF parameters
+added documentation
+note that bdsim lattice is at an early stage and not consistent with the g4bl lattice - please use g4bl for now
+this should be considered the baseline to take forwards for hardware design
+https://indico.cern.ch/event/1418927/#9-demonstrator
 
 2024-04-16-prerelease: just looking at solenoids; scaling the lattice to 0.8 m
 cell length to better fit the RF cavities. See discussion here:
 https://indico.cern.ch/event/1408162/contributions/5918375/attachments/2845045/4974235/2024-04-25_rogers-demonstrator-lattice.pdf
 
+2024-03-01-prerelease: just looking at solenoids; adapting the NuFact lattice to
+use a slightly more realistic solenoid geometry. See discussion here:
+https://indico.cern.ch/event/1397981/contributions/5875820/attachments/2828539/4941918/2024-03-28_rogers-demonstrator-lattice.pdf
+
+2022-11-01-release: this is the lattice presented at NuFact. It is published at
+http://dx.doi.org/10.3390/psf2023008037
 
 Release procedure
 -----------------
