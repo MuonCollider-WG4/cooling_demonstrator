@@ -9,6 +9,9 @@ This repo contains the lattice files for the cooling demonstrator. Contents:
 Release notes
 -------------
 
+2024-05-24-release:
+Minor changes to the schematic & parameters tables. This release is in support of the D8.1 of the MuCol project
+
 2024-05-23-prerelease:
 optimised the cooling cell lattice, including absorber thickness, window thickness, RF iris radius, RF parameters
 added documentation
