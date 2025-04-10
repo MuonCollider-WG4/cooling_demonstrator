@@ -1,16 +1,17 @@
 # basic cell setup and tracking parameters
-param cell_length=1600.0
-param n_cells=210
+param cell_length=2000.0
+param n_cells=30
 param n_precells=10
 param output_planes_per_cell=1
-param output_cells=200
-param stochastics=1
+param output_cells=10
+param stochastics=0
 param disable=Decay
-param do_cooling=1
+param do_cooling=0
 param pi=3.1415926535
 param c_light=299.792458 # mm/ns
 param bessel_0=2.405
 param do_field_map=1
+param pipe_radius=180
 
 # stepping parameters
 param epsMax=0.01
@@ -25,23 +26,44 @@ param beamYp=0.0
 param kinetic_energy=0.12053575093932192*1e3
 param ref_p=0.2*1e3
 
-# solenoids
-param coil_radius=250.0
-param coil_thickness=169.33457396636425
-param coil_length=140.0
-param coil_tolerance=0.001
-param exact_computation=0
-param max_z=10000.0
-param nsheets=20
-param cooling_solenoid_current=500.0
+# derivative solenoids
+# this uses an algorithm developed by rogers but not in g4bl main branch
+# look for the derivativessolenoid code in
+# https://github.com/MuonCollider-WG4/optimisations/tree/master
+# (requires "expert" mode)
+param ds_b1=6.8517
+param ds_b2=1.0276
+param ds_b3=0.2165
+param ds_max_deriv=5
+
+# pancake solenoids
 param sp1=1
 param sp2=-1
 param sp3=1
 param sp4=-1
-param sz_pos=0.06292907877194552
+param n_sheets=5
+param max_z=1000
+param exact_computation=0
+param coil_tolerance=1e-1
+
+param inner_radius_1=285
+param outer_radius_1=355
+param pancake_length_1=12 # length of each pancake
+param spacer_length_1=4
+param sol_z_1=77 # position of inner edge of inner pancake
+param n_pancakes_1=17
+param current_1=328.43
+
+param inner_radius_2=185
+param outer_radius_2=245
+param pancake_length_2=12 # length of each pancake
+param spacer_length_2=3
+param sol_z_2=45 # position of inner edge of inner pancake
+param n_pancakes_2=5
+param current_2=300.0
 
 # dipoles
-param cooling_dipole_field=0.2
+param cooling_dipole_field=0.0
 param dp_pos=0.1
 param dp_length=100
 param dp1=1
@@ -70,7 +92,7 @@ param wedge_offset_trans=0 # wedge axis transverse offset
 param wedge_material=LITHIUM_HYDRIDE
 param wedge_window_thickness = 0.0
 
-param wedge_r=$coil_radius-1
+param wedge_r=$pipe_radius-1
 param do_wedge=$wedge_angle>0.001||$wedge_angle<-0.001
 if $do_wedge
     param wedge_dh=$wedge_thickness/2.0/tan(abs($wedge_angle)/2*$pi/180) # distance from tip of wedge to midplane
@@ -93,16 +115,27 @@ param output_z_step=$cell_length/$output_planes_per_cell
 
 physics QGSP_BIC doStochastics=$stochastics disable=$disable
 
-coil c1 innerRadius=$coil_radius outerRadius=$coil_radius+$coil_thickness length=$coil_length \
-        nSheets=$nsheets tolerance=$coil_tolerance maxZ=$max_z exactComputation=$exact_computation
-solenoid sol1 coilName=c1 current=$cooling_solenoid_current kill=1 color=0,1,0  
+#coil c1 innerRadius=$coil_radius outerRadius=$coil_radius+$coil_thickness length=$coil_length \
+#        nSheets=$n_sheets tolerance=$coil_tolerance maxZ=$max_z exactComputation=$exact_computation
+#solenoid sol1 coilName=c1 current=$cooling_solenoid_current kill=1 color=0,1,0
+
+
+coil coil_pancake_1 innerRadius=$inner_radius_1 outerRadius=$outer_radius_1 length=$pancake_length_1 \
+     nSheets=$n_sheets tolerance=$coil_tolerance maxZ=$max_z exactComputation=$exact_computation
+solenoid sol_pancake_1 coilName=coil_pancake_1 current=$current_1 kill=1 color=0,1,0
+
+coil coil_pancake_2 innerRadius=$inner_radius_2 outerRadius=$outer_radius_2 length=$pancake_length_2 \
+     nSheets=$n_sheets tolerance=$coil_tolerance maxZ=$max_z exactComputation=$exact_computation
+solenoid sol_pancake_2 coilName=coil_pancake_2 current=$current_2 kill=1 color=0,1,0
+
+
 
 trap wedge_trap height=$wedge_h length=$wedge_r*2 upperWidth=$wedge_t0 lowerWidth=$wedge_t1 material=$wedge_material color=1,0,0
 tube wedge_beampipeinner outerRadius=$wedge_r length=450.0
 boolean op=intersection wedge wedge_beampipeinner wedge_trap rotation=Y$wedge_rot y=$wedge_z material=$wedge_material
 tube wedge_marker innerRadius=$wedge_r+1 outerRadius=$wedge_r+10 length=1 color=0.6,0.5,0.0
 
-tube collimator innerRadius=$coil_radius-50.0 outerRadius=999.999 length=10 kill=1 color=0.5,0.5,0.5
+tube collimator innerRadius=$pipe_radius-50.0 outerRadius=999.999 length=10 kill=1 color=0.5,0.5,0.5
 tube minus innerRadius=0 outerRadius=10 length=10 kill=1 color=0,0,1
 tube plus innerRadius=0 outerRadius=10 length=10 kill=1 color=1,0,0
 
@@ -123,14 +156,26 @@ do cell_index -$n_precells $n_cells
     place solbend z=($cell_index+0.5+$dp_pos)*$cell_length By=$cooling_dipole_field*$dp3 rename=solbend_$cell_index.3
     place solbend z=($cell_index+1.0-$dp_pos)*$cell_length By=$cooling_dipole_field*$dp4 rename=solbend_$cell_index.4
 
-    place sol1 z=($cell_index+0.0+$sz_pos)*$cell_length current=$cooling_solenoid_current*$sp1 rename=sol_$cell_index.1
-    place sol1 z=($cell_index+0.5-$sz_pos)*$cell_length current=$cooling_solenoid_current*$sp2 rename=sol_$cell_index.2
-    place sol1 z=($cell_index+0.5+$sz_pos)*$cell_length current=$cooling_solenoid_current*$sp3 rename=sol_$cell_index.3
-    place sol1 z=($cell_index+1.0-$sz_pos)*$cell_length current=$cooling_solenoid_current*$sp4 rename=sol_$cell_index.4
+    do pancake_index 1 $n_pancakes_1
+        param pancake_offset=$sol_z_1+$pancake_length_1/2+($pancake_index-1)*($pancake_length_1+$spacer_length_1)
+        place sol_pancake_1 z=($cell_index+0.0)*$cell_length+($pancake_offset) current=$current_1*$sp1 rename=sol_$cell_index.$pancake_index.1
+        place sol_pancake_1 z=($cell_index+0.5)*$cell_length-($pancake_offset) current=$current_1*$sp2 rename=sol_$cell_index.$pancake_index.2
+        place sol_pancake_1 z=($cell_index+0.5)*$cell_length+($pancake_offset) current=$current_1*$sp3 rename=sol_$cell_index.$pancake_index.3
+        place sol_pancake_1 z=($cell_index+1.0)*$cell_length-($pancake_offset) current=$current_1*$sp4 rename=sol_$cell_index.$pancake_index.4
+    enddo
+
+    do pancake_index 1 $n_pancakes_2
+        param pancake_offset=$sol_z_2+$pancake_length_2/2+($pancake_index-1)*($pancake_length_2+$spacer_length_2)
+        place sol_pancake_2 z=($cell_index+0.0)*$cell_length+($pancake_offset) current=$current_2*$sp1 rename=sol_$cell_index.$pancake_index.1
+        place sol_pancake_2 z=($cell_index+0.5)*$cell_length-($pancake_offset) current=$current_2*$sp2 rename=sol_$cell_index.$pancake_index.2
+        place sol_pancake_2 z=($cell_index+0.5)*$cell_length+($pancake_offset) current=$current_2*$sp3 rename=sol_$cell_index.$pancake_index.3
+        place sol_pancake_2 z=($cell_index+1.0)*$cell_length-($pancake_offset) current=$current_2*$sp4 rename=sol_$cell_index.$pancake_index.4
+    enddo
 
     place minus z=$cell_index*$cell_length x=-500 # blue
     place plus z=$cell_index*$cell_length x=+500 # red
 enddo
+
 do cell_index 0 $n_cells
     param cell_z=$cell_index*$cell_length
     place wedge_marker z=$cell_z-$wedge_thickness/2.0 rename=wedge_marker_a_$cell_index
