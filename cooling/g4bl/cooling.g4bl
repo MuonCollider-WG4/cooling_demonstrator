@@ -1,9 +1,9 @@
 # basic cell setup and tracking parameters
 param cell_length=2000.0
-param n_cells=30
+param n_cells=210
 param n_precells=10
 param output_planes_per_cell=1
-param output_cells=10
+param output_cells=200
 param stochastics=0
 param disable=Decay
 param do_cooling=0
@@ -11,7 +11,7 @@ param pi=3.1415926535
 param c_light=299.792458 # mm/ns
 param bessel_0=2.405
 param do_field_map=1
-param pipe_radius=180
+param pipe_radius=81.6
 
 # stepping parameters
 param epsMax=0.01
@@ -203,7 +203,7 @@ enddo
 
 zntuple output file=output format=FOR009.DAT zloop=0:$output_z_max:$output_z_step referenceParticle=1
 reference particle=mu+ beamZ=0.0 referenceMomentum=$ref_p beamX=$beamX beamY=$beamY beamXp=$beamXp  beamYp=$beamYp noEfield=1 noEloss=1
-beam ascii file=beam.tmp beamZ=0.0 beamX=$beamX beamY=$beamY beamXp=$beamXp  beamYp=$beamYp lastEvent=100 # user provided file with particle data
+beam ascii file=beam.tmp beamZ=0.0 beamX=$beamX beamY=$beamY beamXp=$beamXp  beamYp=$beamYp lastEvent=10000 # user provided file with particle data
 
 if $do_field_map
     fieldntuple field_out format=ascii filename=fieldmap.dat z=0,$cell_length,10
