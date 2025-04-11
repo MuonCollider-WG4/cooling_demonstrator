@@ -31,12 +31,15 @@ param ref_p=0.2*1e3
 # look for the derivativessolenoid code in
 # https://github.com/MuonCollider-WG4/optimisations/tree/master
 # (requires "expert" mode)
-param ds_b1=6.8517
-param ds_b2=1.0276
-param ds_b3=0.2165
+param do_derivatives_solenoid=1
+param ds_b0=6.8517
+param ds_b1=1.0276
+param ds_b2=0.2165
+param ds_b3=0.0
 param ds_max_deriv=5
 
 # pancake solenoids
+param do_pancake_solenoid=0
 param sp1=1
 param sp2=-1
 param sp3=1
@@ -119,15 +122,19 @@ physics QGSP_BIC doStochastics=$stochastics disable=$disable
 #        nSheets=$n_sheets tolerance=$coil_tolerance maxZ=$max_z exactComputation=$exact_computation
 #solenoid sol1 coilName=c1 current=$cooling_solenoid_current kill=1 color=0,1,0
 
+if $do_pancake_solenoid
+    coil coil_pancake_1 innerRadius=$inner_radius_1 outerRadius=$outer_radius_1 length=$pancake_length_1 \
+         nSheets=$n_sheets tolerance=$coil_tolerance maxZ=$max_z exactComputation=$exact_computation
+    solenoid sol_pancake_1 coilName=coil_pancake_1 current=$current_1 kill=1 color=0,1,0
 
-coil coil_pancake_1 innerRadius=$inner_radius_1 outerRadius=$outer_radius_1 length=$pancake_length_1 \
-     nSheets=$n_sheets tolerance=$coil_tolerance maxZ=$max_z exactComputation=$exact_computation
-solenoid sol_pancake_1 coilName=coil_pancake_1 current=$current_1 kill=1 color=0,1,0
+    coil coil_pancake_2 innerRadius=$inner_radius_2 outerRadius=$outer_radius_2 length=$pancake_length_2 \
+         nSheets=$n_sheets tolerance=$coil_tolerance maxZ=$max_z exactComputation=$exact_computation
+    solenoid sol_pancake_2 coilName=coil_pancake_2 current=$current_2 kill=1 color=0,1,0
+endif
 
-coil coil_pancake_2 innerRadius=$inner_radius_2 outerRadius=$outer_radius_2 length=$pancake_length_2 \
-     nSheets=$n_sheets tolerance=$coil_tolerance maxZ=$max_z exactComputation=$exact_computation
-solenoid sol_pancake_2 coilName=coil_pancake_2 current=$current_2 kill=1 color=0,1,0
-
+if $do_derivatives_solenoid
+    derivativessolenoid derivsol color=0,1,0 cellLength=$cell_length/2 length=$cell_length maxDerivative=$ds_max_deriv maxR=$pipe_radius*2 harmonic0=$ds_b0 harmonic1=$ds_b1 harmonic2=$ds_b2 harmonic3=$ds_b3 fieldModel=fourier
+endif
 
 
 trap wedge_trap height=$wedge_h length=$wedge_r*2 upperWidth=$wedge_t0 lowerWidth=$wedge_t1 material=$wedge_material color=1,0,0
@@ -156,21 +163,27 @@ do cell_index -$n_precells $n_cells
     place solbend z=($cell_index+0.5+$dp_pos)*$cell_length By=$cooling_dipole_field*$dp3 rename=solbend_$cell_index.3
     place solbend z=($cell_index+1.0-$dp_pos)*$cell_length By=$cooling_dipole_field*$dp4 rename=solbend_$cell_index.4
 
-    do pancake_index 1 $n_pancakes_1
-        param pancake_offset=$sol_z_1+$pancake_length_1/2+($pancake_index-1)*($pancake_length_1+$spacer_length_1)
-        place sol_pancake_1 z=($cell_index+0.0)*$cell_length+($pancake_offset) current=$current_1*$sp1 rename=sol_$cell_index.$pancake_index.1
-        place sol_pancake_1 z=($cell_index+0.5)*$cell_length-($pancake_offset) current=$current_1*$sp2 rename=sol_$cell_index.$pancake_index.2
-        place sol_pancake_1 z=($cell_index+0.5)*$cell_length+($pancake_offset) current=$current_1*$sp3 rename=sol_$cell_index.$pancake_index.3
-        place sol_pancake_1 z=($cell_index+1.0)*$cell_length-($pancake_offset) current=$current_1*$sp4 rename=sol_$cell_index.$pancake_index.4
-    enddo
+    if $do_pancake_solenoid
+        do pancake_index 1 $n_pancakes_1
+            param pancake_offset=$sol_z_1+$pancake_length_1/2+($pancake_index-1)*($pancake_length_1+$spacer_length_1)
+            place sol_pancake_1 z=($cell_index+0.0)*$cell_length+($pancake_offset) current=$current_1*$sp1 rename=sol_$cell_index.$pancake_index.1
+            place sol_pancake_1 z=($cell_index+0.5)*$cell_length-($pancake_offset) current=$current_1*$sp2 rename=sol_$cell_index.$pancake_index.2
+            place sol_pancake_1 z=($cell_index+0.5)*$cell_length+($pancake_offset) current=$current_1*$sp3 rename=sol_$cell_index.$pancake_index.3
+            place sol_pancake_1 z=($cell_index+1.0)*$cell_length-($pancake_offset) current=$current_1*$sp4 rename=sol_$cell_index.$pancake_index.4
+        enddo
 
-    do pancake_index 1 $n_pancakes_2
-        param pancake_offset=$sol_z_2+$pancake_length_2/2+($pancake_index-1)*($pancake_length_2+$spacer_length_2)
-        place sol_pancake_2 z=($cell_index+0.0)*$cell_length+($pancake_offset) current=$current_2*$sp1 rename=sol_$cell_index.$pancake_index.1
-        place sol_pancake_2 z=($cell_index+0.5)*$cell_length-($pancake_offset) current=$current_2*$sp2 rename=sol_$cell_index.$pancake_index.2
-        place sol_pancake_2 z=($cell_index+0.5)*$cell_length+($pancake_offset) current=$current_2*$sp3 rename=sol_$cell_index.$pancake_index.3
-        place sol_pancake_2 z=($cell_index+1.0)*$cell_length-($pancake_offset) current=$current_2*$sp4 rename=sol_$cell_index.$pancake_index.4
-    enddo
+        do pancake_index 1 $n_pancakes_2
+            param pancake_offset=$sol_z_2+$pancake_length_2/2+($pancake_index-1)*($pancake_length_2+$spacer_length_2)
+            place sol_pancake_2 z=($cell_index+0.0)*$cell_length+($pancake_offset) current=$current_2*$sp1 rename=sol_$cell_index.$pancake_index.1
+            place sol_pancake_2 z=($cell_index+0.5)*$cell_length-($pancake_offset) current=$current_2*$sp2 rename=sol_$cell_index.$pancake_index.2
+            place sol_pancake_2 z=($cell_index+0.5)*$cell_length+($pancake_offset) current=$current_2*$sp3 rename=sol_$cell_index.$pancake_index.3
+            place sol_pancake_2 z=($cell_index+1.0)*$cell_length-($pancake_offset) current=$current_2*$sp4 rename=sol_$cell_index.$pancake_index.4
+        enddo
+    endif
+
+    if $do_derivatives_solenoid
+        place derivsol z=($cell_index+1)*$cell_length rename=derivsol_$cell_index
+    endif
 
     place minus z=$cell_index*$cell_length x=-500 # blue
     place plus z=$cell_index*$cell_length x=+500 # red
