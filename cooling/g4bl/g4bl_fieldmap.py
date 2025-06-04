@@ -115,6 +115,7 @@ class FieldMapWriter:
         self.r_axis = "x"
         self.bz_axis = "Bz"
         self.br_axis = "Bx"
+        self.write_format = "block"
 
         self.norm_b = 1.0
         self.current = 1.0
@@ -125,10 +126,10 @@ class FieldMapWriter:
         """Write the header information"""
         z0 = self.z_list[0]
         nz = len(self.z_list)
-        dz = (self.z_list[1]-self.z_list[0])/(nz-1)
+        dz = (self.z_list[-1]-self.z_list[0])/(nz-1)
 
         nr = len(self.r_list)
-        dr = (self.r_list[1]-self.r_list[0])/(nr-1)
+        dr = (self.r_list[-1]-self.r_list[0])/(nr-1)
 
         header = f"""* Field map generated from {self.field_map.title}
 param normB={self.norm_b} current={self.current}
@@ -137,8 +138,11 @@ extendZ flip=Br
 """
         self.file_out.write(header)
 
-    def write_data(self):
-        """Write the body information, sorted by z_axis then r_axis"""
+    def write_data_pointwise(self):
+        """Write the body information, sorted by z_axis then r_axis
+
+        G4Beamline has two formats, this implements the 'pointwise' format
+        """
         rows = []
         for i, z in enumerate(self.field_map.data[self.z_axis]):
             r = self.field_map.data[self.r_axis][i]
@@ -151,6 +155,40 @@ extendZ flip=Br
             self.file_out.write(f"{r:12.10g} {z:12.10g} {br:12.10g} {bz:12.10g}\n")
         print(f"Wrote {len(rows)} lines")
 
+    def write_data_block(self):
+        """Write the body information, sorted by z_axis then r_axis
+
+        G4Beamline has two formats, this implements the 'block' format
+        """
+        rows = []
+        for i, z in enumerate(self.field_map.data[self.z_axis]):
+            r = self.field_map.data[self.r_axis][i]
+            bz = self.field_map.data[self.bz_axis][i]
+            br = self.field_map.data[self.br_axis][i]
+            rows.append([z, r, bz, br])
+        rows = sorted(rows)
+        self.file_out.write("Bz\n")
+        self.write_a_block(rows, 2)
+        self.file_out.write("Br\n")
+        self.write_a_block(rows, 3)
+        print(f"Wrote {len(rows)} elements")
+
+    def write_a_block(self, rows, element_id):
+        """
+        Loop through the list of rows and write fieldmap for a given element
+        """
+        dz = self.z_list[1]-self.z_list[0]
+        z_old = rows[0][0]
+        for a_row in rows:
+            btarget = a_row[element_id]
+            z = a_row[0]
+            self.file_out.write(f"{btarget:12.10g} ")
+            if abs(z-z_old) > dz/2:
+                self.file_out.write("\n")
+            z_old = z
+
+
+
     def write_field_map(self):
         """Write the field map"""
         print(f"Writing to {self.output_filename}")
@@ -158,7 +196,13 @@ extendZ flip=Br
         self.z_list = self.field_map.get_axis(self.z_axis)
         self.r_list = self.field_map.get_axis(self.r_axis)
         self.write_header()
-        self.write_data()
+        if self.write_format == "block":
+            self.write_data_block()
+        elif self.write_format == "pointwise":
+            self.write_data_pointwise()
+        else:
+            raise KeyError(f"Did not recognise write format '{self.write_format}'")
+
 
 def main():
     if len(sys.argv) < 3:
