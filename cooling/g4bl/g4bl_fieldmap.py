@@ -115,7 +115,7 @@ class FieldMapWriter:
         self.r_axis = "x"
         self.bz_axis = "Bz"
         self.br_axis = "Bx"
-        self.write_format = "block"
+        self.write_format = "pointwise"
 
         self.norm_b = 1.0
         self.current = 1.0
@@ -169,25 +169,29 @@ extendZ flip=Br
         rows = sorted(rows)
         self.file_out.write("Bz\n")
         self.write_a_block(rows, 2)
-        self.file_out.write("Br\n")
+        self.file_out.write("\nBr\n")
         self.write_a_block(rows, 3)
         print(f"Wrote {len(rows)} elements")
 
     def write_a_block(self, rows, element_id):
         """
         Loop through the list of rows and write fieldmap for a given element
+
+        Do add a new line when stepping in z
+
+        Do not add a new line for last element
         """
         dz = self.z_list[1]-self.z_list[0]
         z_old = rows[0][0]
         for a_row in rows:
             btarget = a_row[element_id]
             z = a_row[0]
-            self.file_out.write(f"{btarget:12.10g} ")
+            print("g4bl_fieldmap::write_a_block", z, z_old)
             if abs(z-z_old) > dz/2:
                 self.file_out.write("\n")
+                print("\n")
+            self.file_out.write(f"{btarget:12.10g} ")
             z_old = z
-
-
 
     def write_field_map(self):
         """Write the field map"""
@@ -216,6 +220,7 @@ def main():
     writer = FieldMapWriter()
     writer.output_filename = sys.argv[2]
     writer.field_map = reader
+    writer.write_format = "block"
     writer.write_field_map()
 
     print("Finished okay")
