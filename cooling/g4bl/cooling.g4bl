@@ -1,6 +1,6 @@
 # basic cell setup and tracking parameters
 param -unset cell_length=2000.0 # this is cell length assuming +--+ dipole polarity i.e. 2*solenoid period
-param -unset n_cells=210
+param -unset n_cells=60
 param -unset n_precells=10
 param -unset output_planes_per_cell=1
 param -unset output_cells=50
@@ -42,6 +42,7 @@ param -unset ds_b3=0.0
 param -unset ds_max_deriv=5
 
 # pancake solenoids
+# series of individual solenoid "pancake coils" that sum to make a solenoid
 param -unset do_pancake_solenoid=0
 param -unset sp1=1
 param -unset sp2=-1
@@ -69,11 +70,13 @@ param -unset n_pancakes_2=5
 param -unset current_2=300.0
 
 # fieldmap solenoids
+# load a solenoid from a field map. ~10x quicker than pancakes, but need to
+# generate a new field map if we change the magnet geometry
 param -unset do_field_map_solenoid=1
 param -unset field_map_solenoid_filename=solenoid_field_map.txt
 param -unset field_map_solenoid_current=1.0 # scale factor for the field map
 
-# write a fieldmap (e.g. for solenoid field map generation)
+# write a 2d fieldmap (e.g. for solenoid field map generation)
 param -unset write_field_map_2d=0
 param -unset field_map_2d_filename=fieldmap_2d
 param -unset fieldmap_2d_z_spacing=5
@@ -96,7 +99,7 @@ param -unset efield=30.0 # MV/m
 param -unset iris_radius=0.5*$c_light/$frequency*$bessel_0/2/$pi
 param -unset rf_length=188.56 # mm
 param -unset window_thickness=0.1+1e-9 # mm, must be > 0 (hence 1e-9 thickness)
-param -unset window_material=Be
+param -unset window_material=Be # WARNING! need to implement Al windows
 param -unset wall_thickness=0.4 # mm
 param -unset n_rf_cavities=3
 param -unset rf_separation=5
@@ -133,10 +136,7 @@ param output_z_step=$cell_length/$output_planes_per_cell
 
 physics QGSP_BIC doStochastics=$stochastics disable=$disable
 
-#coil c1 innerRadius=$coil_radius outerRadius=$coil_radius+$coil_thickness length=$coil_length \
-#        nSheets=$n_sheets tolerance=$coil_tolerance maxZ=$max_z exactComputation=$exact_computation
-#solenoid sol1 coilName=c1 current=$cooling_solenoid_current kill=1 color=0,1,0
-
+#################### Pancake Solenoid ##################
 if $do_pancake_solenoid
     coil coil_pancake_1 innerRadius=$inner_radius_1 outerRadius=$outer_radius_1 length=$pancake_length_1 \
          nSheets=$n_sheets tolerance=$coil_tolerance maxZ=$max_z exactComputation=$exact_computation
@@ -147,34 +147,47 @@ if $do_pancake_solenoid
     solenoid sol_pancake_2 coilName=coil_pancake_2 current=$current_2 kill=1 color=0,1,0
 endif
 
+#################### Derivatives Solenoid ##################
 if $do_derivatives_solenoid
     derivativessolenoid derivsol color=0,1,0 cellLength=$cell_length/2 length=$cell_length maxDerivative=$ds_max_deriv maxR=$pipe_radius*2 harmonic0=$ds_b0 harmonic1=$ds_b1 harmonic2=$ds_b2 harmonic3=$ds_b3 fieldModel=fourier
 endif
 
+#################### Field Map Solenoid ##################
 if $do_field_map_solenoid
     fieldmap solenoid_field_map filename=$field_map_solenoid_filename current=$field_map_solenoid_current
 endif
+
+#################### Wedge absorber #######################
 
 trap wedge_trap height=$wedge_h length=$wedge_r*2 upperWidth=$wedge_t0 lowerWidth=$wedge_t1 material=$wedge_material color=1,0,0
 tube wedge_beampipeinner outerRadius=$wedge_r length=450.0
 boolean op=intersection wedge wedge_beampipeinner wedge_trap rotation=Y$wedge_rot y=$wedge_z material=$wedge_material
 tube wedge_marker innerRadius=$wedge_r+1 outerRadius=$wedge_r+10 length=1 color=0.6,0.5,0.0
 
-tube collimator innerRadius=$pipe_radius-50.0 outerRadius=999.999 length=10 kill=1 color=0.5,0.5,0.5
+
+#################### Markers (for visualisation) #######################
+
 tube minus innerRadius=0 outerRadius=10 length=10 kill=1 color=0,0,1
 tube plus innerRadius=0 outerRadius=10 length=10 kill=1 color=1,0,0
+
+
+################### Dipoles #######################
+# Note G4BL fringe field model is buggy; don't use it
 
 genericbend solbend fieldWidth=1000 fieldHeight=1000 fieldLength=$dp_length \
                ironWidth=-1 ironHeight=-1 ironLength=-1 \
                openAperture=1 \
                By=$cooling_dipole_field kill=1 fringe=0 ironColor=1,1,1
 
+################### RF Cavities #######################
 param rf_spacing=$rf_length+$wall_thickness*2+$window_thickness+$rf_separation
 pillbox rf innerLength=$rf_length frequency=$frequency maxGradient=$efield phaseAcc=$rf_phase \
 win1Thick=0.0 win1OuterRadius=$iris_radius collarThick=0 collarRadialThick=0\
 winMat=$window_material irisRadius=$iris_radius+1e-6 win2Thick=0.0 wallThick=$wall_thickness pipeThick=$wall_thickness kill=1
 tube rf_window outerRadius=$iris_radius length=$window_thickness material=Be
 
+
+################## Placement - magnets ################''
 do cell_index -$n_precells $n_cells
     place solbend z=($cell_index+0.0+$dp_pos)*$cell_length By=$cooling_dipole_field*$dp1 rename=solbend_$cell_index.1
     place solbend z=($cell_index+0.5-$dp_pos)*$cell_length By=$cooling_dipole_field*$dp2 rename=solbend_$cell_index.2
@@ -212,6 +225,7 @@ do cell_index -$n_precells $n_cells
     place plus z=$cell_index*$cell_length x=+500 # red
 enddo
 
+################## Placement - RF & Absorbers ################
 do cell_index 0 $n_cells
     param cell_z=$cell_index*$cell_length
     place wedge_marker z=$cell_z-$wedge_thickness/2.0 rename=wedge_marker_a_$cell_index
@@ -237,10 +251,12 @@ do cell_index 0 $n_cells
     endif
 enddo
 
-zntuple output file=output format=FOR009.DAT zloop=0:$output_z_max:$output_z_step referenceParticle=1
+################## Input beam #################################
 reference particle=mu+ beamZ=0.0 referenceMomentum=$ref_p beamX=$beamX beamY=$beamY beamXp=$beamXp  beamYp=$beamYp noEfield=1 noEloss=1
 beam ascii file=beam.tmp beamZ=0.0 beamX=$beamX beamY=$beamY beamXp=$beamXp  beamYp=$beamYp lastEvent=$last_event # user provided file with particle data
 
+################## Output #################################
+zntuple output file=output format=FOR009.DAT zloop=0:$output_z_max:$output_z_step referenceParticle=1
 if $write_field_map_1d
     fieldntuple field_out_1d format=ascii filename=fieldmap.dat z=0,$cell_length,10
 endif
