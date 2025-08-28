@@ -1,0 +1,55 @@
+!Collimators definition
+c1: ecol, l=0.001*mm, xsize=300*mm, ysize=300*mm, material="graphite", outerDiameter=1500*mm;
+cend: ecol, l=0.001*mm, xsize=0*mm, ysize=0*mm, material="graphite", outerDiameter=1500*mm; 
+
+d_min: drift, l=0.001*mm;
+
+
+o1: drift, l=0.4*m;
+QF1: quadrupole, l=0.5*m, k1:=1.08, scaling=1.15, aper1=200*mm;
+o2: drift, l=0.4*m;
+QD: quadrupole, l=0.5*m, k1:=-2.05, scaling=1.15, aper1=200*mm;
+o3: drift, l=0.4*m;
+QF2: quadrupole, l=0.5*m, k1:=1.08, scaling=1.15, aper1=200*mm;
+o4: drift, l=0.4*m;
+
+cell: line=(o1, QF1, o2, QD, o3, QF2, o4);
+DecayChannel_triplet: line=(cell, cell, cell, d_min, cend);
+
+
+o11: drift, l=0.4*m;
+QF11: quadrupole, l=0.275*m, k1:=1.6, aper1=200*mm;
+o21: drift, l=0.8*m;
+QD1: quadrupole, l=0.55*m, k1:=-1.6, aper1=200*mm;
+o31: drift, l=0.8*m;
+QF21: quadrupole, l=0.275*m, k1:=1.6, aper1=200*mm;
+
+precell: line=(o11, QF11);
+postcell: line=(QF21, o11);
+cell1: line=(QF11, o21, QD1, o31, QF21);
+DecayChannel_FODO: line=(precell, cell1, cell1, cell1, postcell, d_min, cend);
+
+
+option, aper1=300*mm, !aperture size throughout the whole beam unless specified in individual component
+        horizontalWidth=1.0*m; !horizontal width of the elements (made bigger to allow a large beam aperture)
+
+
+use, period=DecayChannel_triplet;        !Choose the beamline you wish to use
+sample, all;    !Virtual detectors before and after every element in analysis
+
+option, ngenerate=1,
+        beamPipeIsInfiniteAbsorber=1,           !kill particles that hit the beam pipe
+        collimatorsAreInfiniteAbsorbers=1,
+        physicsList="em muon decay"; 
+
+
+!Particle beam parameters
+
+beam,  particle="pi+",
+       momentum=270/1.15*MeV, 
+       distrType="userfile",
+       distrFile="/path/to/the/beam/file", !to modify appropriately
+       distrFileFormat="x[cm]:y[cm]:xp[rad]:yp[rad]:E[GeV]";
+
+
+
