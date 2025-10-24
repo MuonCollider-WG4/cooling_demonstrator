@@ -22,12 +22,17 @@ param -unset maxStep=10
 param -unset eventTimeLimit=300
 
 # beam
-param -unset beamX=0.0
-param -unset beamY=0.0
-param -unset beamXp=0.0
-param -unset beamYp=0.0
+param -unset beamX=0.0   # G4BL applies this offset to both beam and reference particle
+param -unset beamY=0.0   # G4BL applies this offset to both beam and reference particle
 param -unset kinetic_energy=0.12053575093932192*1e3
 param -unset ref_p=0.2*1e3
+
+# reference
+param refBeamX=0.0
+param refBeamY=0.0
+param refBeamXp=0.0
+param refBeamYp=0.0
+
 
 # derivative solenoids
 # this uses an algorithm developed by rogers but not in g4bl main branch
@@ -93,6 +98,9 @@ param -unset dp3=-1 # polarity
 param -unset dp4=1 # polarity
 
 # rf
+# NOTE: a cavity consists of several cells, each "pillbox" object is a cell
+param -unset refNoEloss=1
+param -unset refNoEfield=1
 param -unset frequency=0.704 # GHz
 param -unset rf_phase=20.0 # degree
 param -unset efield=30.0 # MV/m
@@ -101,7 +109,7 @@ param -unset rf_length=188.56 # mm
 param -unset window_thickness=0.1+1e-9 # mm, must be > 0 (hence 1e-9 thickness)
 param -unset window_material=Be # WARNING! need to implement Al windows
 param -unset wall_thickness=0.4 # mm
-param -unset n_rf_cavities=3
+param -unset n_rf_cells=3
 param -unset rf_separation=5
 
 # wedge
@@ -179,7 +187,7 @@ genericbend solbend fieldWidth=1000 fieldHeight=1000 fieldLength=$dp_length \
                openAperture=1 \
                By=$cooling_dipole_field kill=1 fringe=0 ironColor=1,1,1
 
-################### RF Cavities #######################
+################### RF Cells #######################
 param rf_spacing=$rf_length+$wall_thickness*2+$window_thickness+$rf_separation
 pillbox rf innerLength=$rf_length frequency=$frequency maxGradient=$efield phaseAcc=$rf_phase \
 win1Thick=0.0 win1OuterRadius=$iris_radius collarThick=0 collarRadialThick=0\
@@ -232,28 +240,28 @@ do cell_index 0 $n_cells
     place wedge_marker z=$cell_z+$wedge_thickness/2.0 rename=wedge_marker_b_$cell_index
     if $do_cooling
         place wedge z=$cell_z rotation=Z$wedge_alignment_angle1 rename=wedge$cell_index
-        do rf_index 1 $n_rf_cavities
-            place rf z=$cell_z+$cell_length/4+($rf_index-0.5-$n_rf_cavities/2)*$rf_spacing rename=rf_$cell_index.$rf_index
-            place rf_window z=$cell_z+$cell_length/4+($rf_index-1.0-$n_rf_cavities/2)*$rf_spacing rename=rf_window_$cell_index.$rf_index
+        do rf_index 1 $n_rf_cells
+            place rf z=$cell_z+$cell_length/4+($rf_index-0.5-$n_rf_cells/2)*$rf_spacing rename=rf_$cell_index.$rf_index
+            place rf_window z=$cell_z+$cell_length/4+($rf_index-1.0-$n_rf_cells/2)*$rf_spacing rename=rf_window_$cell_index.$rf_index
         enddo
-        place rf_window z=$cell_z+$cell_length/4+$n_rf_cavities/2*$rf_spacing rename=rf_window_$cell_index.$rf_index
+        place rf_window z=$cell_z+$cell_length/4+$n_rf_cells/2*$rf_spacing rename=rf_window_$cell_index.$rf_index
     endif
     param cell_z=($cell_index+0.5)*$cell_length
     place wedge_marker z=$cell_z-$wedge_thickness/2.0 rename=wedge_marker_c_$cell_index
     place wedge_marker z=$cell_z+$wedge_thickness/2.0 rename=wedge_marker_d_$cell_index
     if $do_cooling
         place wedge z=$cell_z rotation=Z$wedge_alignment_angle2 rename=wedge$cell_index
-        do rf_index 1 $n_rf_cavities
-            place rf z=$cell_z+$cell_length/4+($rf_index-0.5-$n_rf_cavities/2)*$rf_spacing rename=rf_b_$cell_index.$rf_index
-            place rf_window z=$cell_z+$cell_length/4+($rf_index-1.0-$n_rf_cavities/2)*$rf_spacing rename=rf_window_b_$cell_index.$rf_index
+        do rf_index 1 $n_rf_cells
+            place rf z=$cell_z+$cell_length/4+($rf_index-0.5-$n_rf_cells/2)*$rf_spacing rename=rf_b_$cell_index.$rf_index
+            place rf_window z=$cell_z+$cell_length/4+($rf_index-1.0-$n_rf_cells/2)*$rf_spacing rename=rf_window_b_$cell_index.$rf_index
         enddo
-        place rf_window z=$cell_z+$cell_length/4+$n_rf_cavities/2*$rf_spacing rename=rf_window_b_$cell_index.$rf_index
+        place rf_window z=$cell_z+$cell_length/4+$n_rf_cells/2*$rf_spacing rename=rf_window_b_$cell_index.$rf_index
     endif
 enddo
 
 ################## Input beam #################################
-reference particle=mu+ beamZ=0.0 referenceMomentum=$ref_p beamX=$beamX beamY=$beamY beamXp=$beamXp  beamYp=$beamYp noEfield=1 noEloss=1
-beam ascii file=beam.tmp beamZ=0.0 beamX=$beamX beamY=$beamY beamXp=$beamXp  beamYp=$beamYp lastEvent=$last_event # user provided file with particle data
+reference particle=mu+ beamZ=0.0 referenceMomentum=$ref_p beamX=$refBeamX beamY=$refBeamY beamXp=$refBeamXp beamXp=$refBeamYp noEfield=$refNoEfield noEloss=$refNoEloss
+beam ascii file=beam.tmp beamZ=0.0 beamX=$beamX beamY=$beamY lastEvent=$last_event # user provided file with particle data
 
 ################## Output #################################
 zntuple output file=output format=FOR009.DAT zloop=0:$output_z_max:$output_z_step referenceParticle=1
