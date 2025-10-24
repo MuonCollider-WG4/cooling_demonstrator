@@ -9,6 +9,17 @@ This repo contains the lattice files for the cooling demonstrator. Contents:
 Release notes
 -------------
 
+2025-08-27-prerelease:
+Added files for the baseline target and transfer line (pion decay channel and chicane only, beam preparation system and matching section to follow) designs.
+
+2025-08-01-prerelease:
+Preliminary study on longitudinal parameters. I tried updating the wedge parameters, RF reference phase and the
+dipole separation.
+
+2025-04-11-prerelease:
+Update for the 1.0 metre distance between magnet assemblies, following design work by magnet experts. So far 
+only solenoid optics have been studied; longitudinal parameters have not been updated.
+
 2024-05-24-release:
 Minor changes to the schematic & parameters tables. This release is in support of the D8.1 of the MuCol project
 

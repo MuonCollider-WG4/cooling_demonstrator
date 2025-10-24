@@ -1,0 +1,57 @@
+!Collimators definition
+c1: ecol, l=0.001*mm, xsize=300*mm, ysize=300*mm, material="graphite", outerDiameter=1500*mm;
+cend: ecol, l=0.001*mm, xsize=0*mm, ysize=0*mm, material="graphite", outerDiameter=1500*mm; 
+
+d_500: drift, l=500*mm;
+d_1000: drift, l=1000*mm;
+d_min: drift, l=0.001*mm;
+
+ch_q1: quadrupole, l=0.5*m, k1=1.31029, magnetGeometryType="polesfacet", aper1=200*mm;
+ch_q2: quadrupole, l=0.5*m, k1=-1.05062, magnetGeometryType="polesfacet", aper1=200*mm;
+ch_q3: quadrupole, l=0.5*m, k1=-1.17659, magnetGeometryType="polesfacet", aper1=200*mm;
+ch_q4: quadrupole, l=0.5*m, k1=2.39320, magnetGeometryType="polesfacet", aper1=200*mm;
+ch_q5: quadrupole, l=0.5*m, k1=-1.17659, magnetGeometryType="polesfacet", aper1=200*mm;
+ch_q6: quadrupole, l=0.5*m, k1=1.76769, magnetGeometryType="polesfacet", aper1=200*mm;
+ch_q7: quadrupole, l=0.5*m, k1=-1.67486, magnetGeometryType="polesfacet", aper1=200*mm;
+ch_q8: quadrupole, l=0.5*m, k1=0.449285, magnetGeometryType="polesfacet", aper1=200*mm;
+
+s_dp_1: sbend, l=1000*mm, angle=-(3.141592653589793/180)*34;
+s_dp_2: sbend, l=1000*mm, angle=-(3.141592653589793/180)*34; 
+
+
+!Beam lines
+
+Chicane: line=(ch_q1, d_500, ch_q2, d_500, s_dp_1, d_1000, ch_q3, d_500, ch_q4, d_500, ch_q5, d_1000, s_dp_2, d_500, ch_q6, d_500, ch_q7, d_500, ch_q8, d_500);
+
+
+option, aper1=300*mm, !aperture size throughout the whole beam unless specified in individual component
+        horizontalWidth=1.0*m; !horizontal width of the elements (made bigger to allow a large beam aperture)
+
+use, period=Chicane;        !Choose the beamline you wish to use
+sample, all;    !Virtual detectors before and after every element in analysis
+
+option, ngenerate=1,
+        beamPipeIsInfiniteAbsorber=1,           !new, kill particles that hit the beam pipe - testing, 6/12/23
+        collimatorsAreInfiniteAbsorbers=1,
+        physicsList="em muon decay"; 
+
+
+!Particle beam parameters
+
+beam,  particle="mu+",
+       momentum=200*MeV,
+       distrType="gauss",
+       sigmaX=50*mm, 
+       sigmaY=50*mm,
+       sigmaXp=50*mrad,
+       sigmaYp=50*mrad,
+       sigmaP=0.05;
+
+       !Can use a custom input file, e.g. the muon beam resulting at the end of the pion decay lattice
+       !distrType="userfile",
+       !distrFile="/path/to/the/beam/file,
+       !distrFileFormat="x[cm]:y[cm]:-:-:-:-:xp[rad]:yp[rad]:E[GeV]";
+       !distrFileFormat="x[cm]:y[cm]:xp[rad]:yp[rad]:E[GeV]";
+
+
+
