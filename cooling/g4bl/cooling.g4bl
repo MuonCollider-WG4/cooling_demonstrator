@@ -6,7 +6,7 @@ param -unset output_planes_per_cell=1
 param -unset output_cells=50
 param -unset stochastics=1
 param -unset disable=Decay
-param -unset do_cooling=0
+param -unset do_cooling=1
 param -unset write_field_map_1d=1
 param -unset pipe_radius=81.6
 param -unset last_event=10000
@@ -22,16 +22,16 @@ param -unset maxStep=10
 param -unset eventTimeLimit=300
 
 # beam
-param -unset beamX=0.0   # G4BL applies this offset to both beam and reference particle
-param -unset beamY=0.0   # G4BL applies this offset to both beam and reference particle
+param -unset beamX=-6.775634547549178   # G4BL applies this offset to both beam and reference particle
+param -unset beamY=-0.5132166235352209   # G4BL applies this offset to both beam and reference particle
 param -unset kinetic_energy=0.12053575093932192*1e3
 param -unset ref_p=0.2*1e3
 
 # reference
-param refBeamX=0.0
-param refBeamY=0.0
-param refBeamXp=0.0
-param refBeamYp=0.0
+param -unset refBeamX=-7.09149471717852
+param -unset refBeamY=-0.5479562739819246
+param -unset refBeamXp=0.0
+param -unset refBeamYp=0.0
 
 
 # derivative solenoids
@@ -89,7 +89,7 @@ param -unset fieldmap_2d_r_spacing=5
 param -unset fieldmap_2d_r_max=250.0
 
 # dipoles
-param -unset cooling_dipole_field=0.2
+param -unset cooling_dipole_field=0.1
 param -unset dp_pos=0.025 # 0.025 * 2000 mm = 50 mm
 param -unset dp_length=100 # mm
 param -unset dp1=1 # polarity
@@ -102,11 +102,11 @@ param -unset dp4=1 # polarity
 param -unset refNoEloss=1
 param -unset refNoEfield=1
 param -unset frequency=0.704 # GHz
-param -unset rf_phase=20.0 # degree
+param -unset rf_phase=18.840516165747395 # degree
 param -unset efield=30.0 # MV/m
 param -unset iris_radius=0.5*$c_light/$frequency*$bessel_0/2/$pi
 param -unset rf_length=188.56 # mm
-param -unset window_thickness=0.1+1e-9 # mm, must be > 0 (hence 1e-9 thickness)
+param -unset window_thickness=0.0+1e-9 # mm, must be > 0 (hence 1e-9 thickness)
 param -unset window_material=Be # WARNING! need to implement Al windows
 param -unset wall_thickness=0.4 # mm
 param -unset n_rf_cells=3
@@ -116,7 +116,7 @@ param -unset rf_separation=5
 param -unset wedge_alignment_angle1=-90 # rotation about the beam axis; 0 means the thin edge is on the top
 param -unset wedge_alignment_angle2=90 # rotation about the beam axis; 0 means the thin edge is on the top
 param -unset wedge_angle=10.0 # opening angle for the wedge tip
-param -unset wedge_thickness=25.0 # on the beam axis
+param -unset wedge_thickness=20.0 # on the beam axis
 param -unset wedge_offset_z=0.0 # offset along the beam axis
 param -unset wedge_offset_trans=0 # wedge axis transverse offset
 param -unset wedge_material=LITHIUM_HYDRIDE
@@ -260,7 +260,7 @@ do cell_index 0 $n_cells
 enddo
 
 ################## Input beam #################################
-reference particle=mu+ beamZ=0.0 referenceMomentum=$ref_p beamX=$refBeamX beamY=$refBeamY beamXp=$refBeamXp beamXp=$refBeamYp noEfield=$refNoEfield noEloss=$refNoEloss
+reference particle=mu+ beamZ=0.0 referenceMomentum=$ref_p beamX=$refBeamX beamY=$refBeamY beamXp=$refBeamXp beamYp=$refBeamYp noEfield=$refNoEfield noEloss=$refNoEloss
 beam ascii file=beam.tmp beamZ=0.0 beamX=$beamX beamY=$beamY lastEvent=$last_event # user provided file with particle data
 
 ################## Output #################################
