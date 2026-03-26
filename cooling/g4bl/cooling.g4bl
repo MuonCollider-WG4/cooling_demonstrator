@@ -3,6 +3,7 @@ param -unset cell_length=2000.0 # this is cell length assuming +--+ dipole polar
 param -unset n_cells=60
 param -unset n_precells=10
 param -unset output_planes_per_cell=1
+param -unset gap_cell_half=5 # gap every 5 half cells
 param -unset output_cells=50
 param -unset stochastics=1
 param -unset disable=Decay
@@ -235,27 +236,34 @@ enddo
 
 ################## Placement - RF & Absorbers ################
 do cell_index 0 $n_cells
+    param cell_modulo_one=($cell_index*2+1)/$gap_cell_half
     param cell_z=$cell_index*$cell_length
     place wedge_marker z=$cell_z-$wedge_thickness/2.0 rename=wedge_marker_a_$cell_index
     place wedge_marker z=$cell_z+$wedge_thickness/2.0 rename=wedge_marker_b_$cell_index
     if $do_cooling
-        place wedge z=$cell_z rotation=Z$wedge_alignment_angle1 rename=wedge$cell_index
-        do rf_index 1 $n_rf_cells
-            place rf z=$cell_z+$cell_length/4+($rf_index-0.5-$n_rf_cells/2)*$rf_spacing rename=rf_$cell_index.$rf_index
-            place rf_window z=$cell_z+$cell_length/4+($rf_index-1.0-$n_rf_cells/2)*$rf_spacing rename=rf_window_$cell_index.$rf_index
-        enddo
-        place rf_window z=$cell_z+$cell_length/4+$n_rf_cells/2*$rf_spacing rename=rf_window_$cell_index.$rf_index
+        if $cell_modulo_one-floor($cell_modulo_one)>1e-9 # flag for a gap cell upstream
+            place wedge z=$cell_z rotation=Z$wedge_alignment_angle1 rename=wedge$cell_index
+            do rf_index 1 $n_rf_cells
+                place rf z=$cell_z+$cell_length/4+($rf_index-0.5-$n_rf_cells/2)*$rf_spacing rename=rf_$cell_index.$rf_index
+                place rf_window z=$cell_z+$cell_length/4+($rf_index-1.0-$n_rf_cells/2)*$rf_spacing rename=rf_window_$cell_index.$rf_index
+            enddo
+            place rf_window z=$cell_z+$cell_length/4+$n_rf_cells/2*$rf_spacing rename=rf_window_$cell_index.$rf_index
+        endif
     endif
+
+    param cell_modulo_two=($cell_index*2+2)/$gap_cell_half
     param cell_z=($cell_index+0.5)*$cell_length
     place wedge_marker z=$cell_z-$wedge_thickness/2.0 rename=wedge_marker_c_$cell_index
     place wedge_marker z=$cell_z+$wedge_thickness/2.0 rename=wedge_marker_d_$cell_index
     if $do_cooling
-        place wedge z=$cell_z rotation=Z$wedge_alignment_angle2 rename=wedge$cell_index
-        do rf_index 1 $n_rf_cells
-            place rf z=$cell_z+$cell_length/4+($rf_index-0.5-$n_rf_cells/2)*$rf_spacing rename=rf_b_$cell_index.$rf_index
-            place rf_window z=$cell_z+$cell_length/4+($rf_index-1.0-$n_rf_cells/2)*$rf_spacing rename=rf_window_b_$cell_index.$rf_index
-        enddo
-        place rf_window z=$cell_z+$cell_length/4+$n_rf_cells/2*$rf_spacing rename=rf_window_b_$cell_index.$rf_index
+        if $cell_modulo_two-floor($cell_modulo_two)>1e-9 # flag for a gap cell downstream
+            place wedge z=$cell_z rotation=Z$wedge_alignment_angle2 rename=wedge$cell_index
+            do rf_index 1 $n_rf_cells
+                place rf z=$cell_z+$cell_length/4+($rf_index-0.5-$n_rf_cells/2)*$rf_spacing rename=rf_b_$cell_index.$rf_index
+                place rf_window z=$cell_z+$cell_length/4+($rf_index-1.0-$n_rf_cells/2)*$rf_spacing rename=rf_window_b_$cell_index.$rf_index
+            enddo
+            place rf_window z=$cell_z+$cell_length/4+$n_rf_cells/2*$rf_spacing rename=rf_window_b_$cell_index.$rf_index
+        endif
     endif
 enddo
 
