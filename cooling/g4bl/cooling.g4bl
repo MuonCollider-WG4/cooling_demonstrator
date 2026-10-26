@@ -96,8 +96,10 @@ param -unset dp_pos=0.025 # 0.025 * 2000 mm = 50 mm
 param -unset dp_length=100 # mm
 param -unset dp1=1 # polarity
 param -unset dp2=-1 # polarity
-param -unset dp3=-1 # polarity
-param -unset dp4=1 # polarity
+# used for fringe field; from rectilinear PRAB paper, although fall_off parameter there is 2*radius
+param -unset dp_radius=155 # mm, from D8.2 S4.6
+param -unset dp_fall_off=$dp_radius
+param -unset dp_fringe_length=2*$dp_fall_off
 
 # rf
 # NOTE: a cavity consists of several cells, each "pillbox" object is a cell
@@ -189,6 +191,17 @@ genericbend solbend fieldWidth=1000 fieldHeight=1000 fieldLength=$dp_length \
                openAperture=1 \
                By=$cooling_dipole_field kill=1 fringe=0 ironColor=1,1,1
 
+fieldexpr fringe_left_dp1 length=$dp_fringe_length width=2*$dp_radius height=2*$dp_radius By=$dp1*$cooling_dipole_field*((1+exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off))/(1+2*exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*-z/$dp_fall_off))) Bz=-$cooling_dipole_field*exp(5.5*-z/$dp_fall_off)*sin(5.5*y/$dp_fall_off)/(1+2*exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*-z/$dp_fall_off)) nX=2 nY=100 nZ=150
+
+fieldexpr fringe_right_dp1 length=$dp_fringe_length width=2*$dp_radius height=2*$dp_radius By=$dp1*$cooling_dipole_field*((1+exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off))/(1+2*exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*z/$dp_fall_off))) Bz=-$dp1*$cooling_dipole_field*exp(5.5*z/$dp_fall_off)*sin(5.5*y/$dp_fall_off)/(1+2*exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*z/$dp_fall_off)) nX=2 nY=100 nZ=150
+
+
+fieldexpr fringe_left_dp2 length=$dp_fringe_length width=2*$dp_radius height=2*$dp_radius By=$dp2*$cooling_dipole_field*((1+exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off))/(1+2*exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*-z/$dp_fall_off))) Bz=-$dp2*$cooling_dipole_field*exp(5.5*-z/$dp_fall_off)*sin(5.5*y/$dp_fall_off)/(1+2*exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*-z/$dp_fall_off)) nX=2 nY=100 nZ=150
+
+fieldexpr fringe_right_dp2 length=$dp_fringe_length width=2*$dp_radius height=2*$dp_radius By=$dp2*$cooling_dipole_field*((1+exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off))/(1+2*exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*z/$dp_fall_off))) Bz=-$dp2*$cooling_dipole_field*exp(5.5*z/$dp_fall_off)*sin(5.5*y/$dp_fall_off)/(1+2*exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*z/$dp_fall_off)) nX=2 nY=100 nZ=150
+
+
+
 ################### RF Cells #######################
 param rf_spacing=$rf_length+$wall_thickness*2+$window_thickness+$rf_separation
 pillbox rf innerLength=$rf_length frequency=$frequency maxGradient=$efield phaseAcc=$rf_phase \
@@ -199,10 +212,11 @@ tube rf_window outerRadius=$iris_radius length=$window_thickness material=Be
 
 ################## Placement - magnets ################''
 do cell_index -$n_precells $n_cells
-    place solbend z=($cell_index+0.0+$dp_pos)*$cell_length By=$cooling_dipole_field*$dp1 rename=solbend_$cell_index.1
-    place solbend z=($cell_index+0.5-$dp_pos)*$cell_length By=$cooling_dipole_field*$dp2 rename=solbend_$cell_index.2
-    place solbend z=($cell_index+0.5+$dp_pos)*$cell_length By=$cooling_dipole_field*$dp3 rename=solbend_$cell_index.3
-    place solbend z=($cell_index+1.0-$dp_pos)*$cell_length By=$cooling_dipole_field*$dp4 rename=solbend_$cell_index.4
+    place fringe_left_dp1  z=($cell_index+0.0)*$cell_length-$dp_fringe_length/2-1e-6 rename=dipole_fringe_left_$cell_index.1
+    place fringe_right_dp1 z=($cell_index+0.0)*$cell_length+$dp_fringe_length/2 rename=dipole_fringe_left_$cell_index.1
+
+    place fringe_left_dp2  z=($cell_index+0.5)*$cell_length-$dp_fringe_length/2-1e-6 rename=dipole_fringe_left_$cell_index.2
+    place fringe_right_dp2 z=($cell_index+0.5)*$cell_length+$dp_fringe_length/2 rename=dipole_fringe_left_$cell_index.2
 
     if $do_pancake_solenoid
         do pancake_index 1 $n_pancakes_1
