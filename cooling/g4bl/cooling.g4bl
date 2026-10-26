@@ -59,21 +59,22 @@ param -unset max_z=1000
 param -unset exact_computation=0
 param -unset coil_tolerance=1e-1
 
+# cite Mucol D8.2 final report Table 2
 param -unset inner_radius_1=285
-param -unset outer_radius_1=355
+param -unset outer_radius_1=361.2
 param -unset pancake_length_1=12 # length of each pancake
-param -unset spacer_length_1=4
-param -unset sol_z_1=77 # position of inner edge of inner pancake
-param -unset n_pancakes_1=17
-param -unset current_1=328.43
+param -unset spacer_length_1=7.9
+param -unset sol_z_1=146 # position of inner edge of inner pancake
+param -unset n_pancakes_1=11
+param -unset current_1=403.63626421697285 # calculated from current*n_turns/area
 
 param -unset inner_radius_2=185
-param -unset outer_radius_2=245
+param -unset outer_radius_2=256.7
 param -unset pancake_length_2=12 # length of each pancake
-param -unset spacer_length_2=3
-param -unset sol_z_2=45 # position of inner edge of inner pancake
-param -unset n_pancakes_2=5
-param -unset current_2=300.0
+param -unset spacer_length_2=13.7
+param -unset sol_z_2=56 # position of inner edge of inner pancake
+param -unset n_pancakes_2=3
+param -unset current_2=630.6834030683402 # calculated from current*n_turns/area
 
 # fieldmap solenoids
 # load a solenoid from a field map. ~10x quicker than pancakes, but need to
