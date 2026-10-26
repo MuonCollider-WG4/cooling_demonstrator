@@ -9,6 +9,9 @@ This repo contains the lattice files for the cooling demonstrator. Contents:
 Release notes
 -------------
 
+2026-02-18-prerelease:
+Improvements to beam matching and reference particle, RF phasing and beam placement in the actual lattice file.
+
 2025-11-24-release:
 Fixed some documentation. Release for 2025 parameters report.
 
