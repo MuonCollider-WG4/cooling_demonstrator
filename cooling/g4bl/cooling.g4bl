@@ -91,12 +91,15 @@ param -unset fieldmap_2d_r_spacing=5
 param -unset fieldmap_2d_r_max=250.0
 
 # dipoles
-param -unset cooling_dipole_field=0.1
-param -unset dp_pos=0.025 # 0.025 * 2000 mm = 50 mm
-param -unset dp_length=100 # mm
+param do_fieldexpr_dipole=0
+param do_field_map_dipole=1 # use this!
+param field_map_dipole_filename=dipole_field_map.txt
+param -unset cooling_dipole_field=0.15
+param -unset dp_pos=0.0 # fraction of 2000 mm cell length
 param -unset dp1=1 # polarity
 param -unset dp2=-1 # polarity
-# used for fringe field; from rectilinear PRAB paper, although fall_off parameter there is 2*radius
+# used for fieldexpr fringe field; from rectilinear PRAB paper, although fall_off parameter there is 2*radius
+param -unset dp_length=100 # mm
 param -unset dp_radius=155 # mm, from D8.2 S4.6
 param -unset dp_fall_off=$dp_radius
 param -unset dp_fringe_length=2*$dp_fall_off
@@ -184,22 +187,35 @@ tube plus innerRadius=0 outerRadius=10 length=10 kill=1 color=1,0,0
 
 
 ################### Dipoles #######################
-# Note G4BL fringe field model is buggy; don't use it
+# Note G4BL fringe field model is buggy; don't use it. We have two alternatives,
+# leaning on the fringe field model in Muratori et al PRSTAB 18, 2015 (thanks to
+# Ruihu)
 
-genericbend solbend fieldWidth=1000 fieldHeight=1000 fieldLength=$dp_length \
-               ironWidth=-1 ironHeight=-1 ironLength=-1 \
-               openAperture=1 \
-               By=$cooling_dipole_field kill=1 fringe=0 ironColor=1,1,1
+if $do_fieldexpr_dipole
+    genericbend solbend fieldWidth=1000 fieldHeight=1000 fieldLength=$dp_length \
+                   ironWidth=-1 ironHeight=-1 ironLength=-1 \
+                   openAperture=1 \
+                   By=$cooling_dipole_field kill=1 fringe=0 ironColor=1,1,1
 
-fieldexpr fringe_left_dp1 length=$dp_fringe_length width=2*$dp_radius height=2*$dp_radius By=$dp1*$cooling_dipole_field*((1+exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off))/(1+2*exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*-z/$dp_fall_off))) Bz=-$cooling_dipole_field*exp(5.5*-z/$dp_fall_off)*sin(5.5*y/$dp_fall_off)/(1+2*exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*-z/$dp_fall_off)) nX=2 nY=100 nZ=150
+    fieldexpr fringe_left_dp1 length=$dp_fringe_length width=2*$dp_radius height=2*$dp_radius #
+    By=$dp1*$cooling_dipole_field*((1+exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off))/(1+2*exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*-z/$dp_fall_off)))
+    Bz=-$cooling_dipole_field*exp(5.5*-z/$dp_fall_off)*sin(5.5*y/$dp_fall_off)/(1+2*exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*-z/$dp_fall_off))
+    nX=2 nY=100 nZ=150
 
-fieldexpr fringe_right_dp1 length=$dp_fringe_length width=2*$dp_radius height=2*$dp_radius By=$dp1*$cooling_dipole_field*((1+exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off))/(1+2*exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*z/$dp_fall_off))) Bz=-$dp1*$cooling_dipole_field*exp(5.5*z/$dp_fall_off)*sin(5.5*y/$dp_fall_off)/(1+2*exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*z/$dp_fall_off)) nX=2 nY=100 nZ=150
+    fieldexpr fringe_right_dp1 length=$dp_fringe_length
+    width=2*$dp_radius height=2*$dp_radius
+    By=$dp1*$cooling_dipole_field*((1+exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off))/(1+2*exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*z/$dp_fall_off)))
+    Bz=-$dp1*$cooling_dipole_field*exp(5.5*z/$dp_fall_off)*sin(5.5*y/$dp_fall_off)/(1+2*exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*z/$dp_fall_off)) nX=2 nY=100 nZ=150
 
 
-fieldexpr fringe_left_dp2 length=$dp_fringe_length width=2*$dp_radius height=2*$dp_radius By=$dp2*$cooling_dipole_field*((1+exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off))/(1+2*exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*-z/$dp_fall_off))) Bz=-$dp2*$cooling_dipole_field*exp(5.5*-z/$dp_fall_off)*sin(5.5*y/$dp_fall_off)/(1+2*exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*-z/$dp_fall_off)) nX=2 nY=100 nZ=150
+    fieldexpr fringe_left_dp2 length=$dp_fringe_length width=2*$dp_radius height=2*$dp_radius By=$dp2*$cooling_dipole_field*((1+exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off))/(1+2*exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*-z/$dp_fall_off))) Bz=-$dp2*$cooling_dipole_field*exp(5.5*-z/$dp_fall_off)*sin(5.5*y/$dp_fall_off)/(1+2*exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*-z/$dp_fall_off)) nX=2 nY=100 nZ=150
 
-fieldexpr fringe_right_dp2 length=$dp_fringe_length width=2*$dp_radius height=2*$dp_radius By=$dp2*$cooling_dipole_field*((1+exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off))/(1+2*exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*z/$dp_fall_off))) Bz=-$dp2*$cooling_dipole_field*exp(5.5*z/$dp_fall_off)*sin(5.5*y/$dp_fall_off)/(1+2*exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*z/$dp_fall_off)) nX=2 nY=100 nZ=150
+    fieldexpr fringe_right_dp2 length=$dp_fringe_length width=2*$dp_radius height=2*$dp_radius By=$dp2*$cooling_dipole_field*((1+exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off))/(1+2*exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*z/$dp_fall_off))) Bz=-$dp2*$cooling_dipole_field*exp(5.5*z/$dp_fall_off)*sin(5.5*y/$dp_fall_off)/(1+2*exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*z/$dp_fall_off)) nX=2 nY=100 nZ=150
+endif
 
+if $do_field_map_dipole
+    fieldmap dipole_field_map filename=$field_map_dipole_filename
+endif
 
 
 ################### RF Cells #######################
@@ -212,11 +228,17 @@ tube rf_window outerRadius=$iris_radius length=$window_thickness material=Be
 
 ################## Placement - magnets ################''
 do cell_index -$n_precells $n_cells
-    place fringe_left_dp1  z=($cell_index+0.0)*$cell_length-$dp_fringe_length/2-1e-6 rename=dipole_fringe_left_$cell_index.1
-    place fringe_right_dp1 z=($cell_index+0.0)*$cell_length+$dp_fringe_length/2 rename=dipole_fringe_left_$cell_index.1
+    if $do_fieldexpr_dipole
+        place fringe_left_dp1  z=($cell_index+0.0)*$cell_length-$dp_fringe_length/2-1e-6 rename=dipole_fringe_left_$cell_index.1
+        place fringe_right_dp1 z=($cell_index+0.0)*$cell_length+$dp_fringe_length/2 rename=dipole_fringe_left_$cell_index.1
 
-    place fringe_left_dp2  z=($cell_index+0.5)*$cell_length-$dp_fringe_length/2-1e-6 rename=dipole_fringe_left_$cell_index.2
-    place fringe_right_dp2 z=($cell_index+0.5)*$cell_length+$dp_fringe_length/2 rename=dipole_fringe_left_$cell_index.2
+        place fringe_left_dp2  z=($cell_index+0.5)*$cell_length-$dp_fringe_length/2-1e-6 rename=dipole_fringe_left_$cell_index.2
+        place fringe_right_dp2 z=($cell_index+0.5)*$cell_length+$dp_fringe_length/2 rename=dipole_fringe_left_$cell_index.2
+    endif
+    if $do_field_map_dipole
+        place dipole_field_map z=($cell_index+0.0)*$cell_length current=$dp1*$cooling_dipole_field rename=dipole_field_map_$cell_index.1
+        place dipole_field_map z=($cell_index+0.5)*$cell_length current=$dp2*$cooling_dipole_field rename=dipole_field_map_$cell_index.2
+    endif
 
     if $do_pancake_solenoid
         do pancake_index 1 $n_pancakes_1
