@@ -1,6 +1,7 @@
 * Dipole field map generated from cooling demonstrator toolset
 param normB=2.61297389224785 current=1.0
 grid X0=0.0 Y0=0.0 Z0=0.0 nX=31 nY=31 nZ=101 dX=5.0 dY=5.0 dZ=5.0
+extendX
 extendY flip=Bz
 extendZ flip=Bz
 data
