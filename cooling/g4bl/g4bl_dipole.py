@@ -5,6 +5,8 @@ import sys
 import math
 import subprocess
 import tempfile
+import matplotlib
+import matplotlib.pyplot
 
 """
 Script to generate a dipole field map with a soft-edged fringe field
@@ -109,6 +111,7 @@ extendZ flip=Bz
 class TestDipole:
     def __init__(self):
         self.dipole = DipoleField()
+        self.dipole.fall_off = 50.0
         self.test_dipole()
         self.test_dipole_off_axis()
 
@@ -146,16 +149,47 @@ class TestDipole:
         quite interesting to see non-convergence poles appearing as "fall_off" gets smaller.
         """
         delta = 1.0e-3
-        y = 10.0
-        for y in range(-50, 151, 50):
+        y_list = [y for y in range(-50, 151, 50)]
+        z_list = [z for z in range(-200, 201, 5)]
+        by_lists = []
+        bz_lists = []
+        divb_lists = []
+        curlb_lists = []
+        for y in y_list:
             #print("y:", y)
-            for z in range(-100, 101, 20):
+            by_lists.append([])
+            bz_lists.append([])
+            divb_lists.append([])
+            curlb_lists.append([])
+            for z in z_list:
                 [bx, by, bz] = self.dipole.get_field(0, y, z)
                 divb = self.get_div_b(0, y, z, delta)
                 curlb = self.get_curl_b(0, y, z, delta)
                 #print(f"    z {z:10.4g} b {bx:10.4g} {by:10.4g} {bz:10.4g} divb {divb:10.4g} curlb {curlb:10.4g}")
                 assert abs(divb) < 1.0e-3, f"divb {divb} too large for y={y} z={z}"
                 assert abs(curlb) < 1.0e-3, f"curlb {curlb} too large for y={y} z={z}"
+                by_lists[-1].append(by)
+                bz_lists[-1].append(bz)
+                divb_lists[-1].append(divb)
+                curlb_lists[-1].append(curlb)
+        labels = [f"y={y} mm" for y in y_list]
+        self.plot(z_list, by_lists, "$B_y$ [T]", "by", labels)
+        self.plot(z_list, bz_lists, "$B_z$ [T]", "bz", labels)
+        self.plot(z_list, curlb_lists, "$\\nabla \\times B$ [T/mm]", "curlb", labels)
+        self.plot(z_list, divb_lists, "$\\nabla . B$ [T/mm]", "divb", labels)
+
+    def plot(self, z_list, b_lists, y_label, file_suffix, labels):
+        figure = matplotlib.pyplot.figure()
+        axes = figure.add_subplot(1, 1, 1)
+        print(b_lists[0])
+        axes.set_xlabel("z [mm]")
+        axes.set_ylabel(y_label)
+        for i, b_list in enumerate(b_lists):
+            axes.plot(z_list, b_list, label=labels[i])
+        axes.legend()
+        figure.savefig(f"dipole_field_map_{file_suffix}.png")
+
+
 
 class TestFieldMap:
     def __init__(self):
@@ -228,3 +262,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+    matplotlib.pyplot.show(block=False)
+    input("Press <cr> to exit")
