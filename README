@@ -8,6 +8,8 @@ This repo contains the lattice files for the cooling demonstrator. Contents:
 
 Release notes
 -------------
+2026-11-09-prerelease:
+Update to latest solenoid model. Include field map for soft-edged dipole and script to generate new field maps.
 
 2026-02-18-prerelease:
 Improvements to beam matching and reference particle, RF phasing and beam placement in the actual lattice file.
