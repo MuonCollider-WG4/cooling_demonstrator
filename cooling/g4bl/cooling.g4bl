@@ -3,7 +3,7 @@ param -unset cell_length=2000.0 # this is cell length assuming +--+ dipole polar
 param -unset n_cells=60
 param -unset n_precells=10
 param -unset output_planes_per_cell=1
-param -unset gap_cell_half=5 # gap every 5 half cells
+param -unset gap_cell_half=1000 # gap every 5 half cells
 param -unset output_cells=50
 param -unset stochastics=1
 param -unset disable=Decay
@@ -13,26 +13,26 @@ param -unset pipe_radius=81.6
 param -unset last_event=10000
 
 # physics parameters
-param c_light=299.792458
-param bessel_0=2.404825557695772
 param pi=3.141592653589793
+param c_light=299.792458 # mm/ns
+param bessel_0=2.404825557695772
 
 # stepping parameters
-param epsMax=0.01
-param -unset maxStep=10
+param -unset maxStep=10.0
 param -unset eventTimeLimit=300
+param epsMax=0.01
 
 # beam
-param -unset beamX=-6.775634547549178   # G4BL applies this offset to both beam and reference particle
-param -unset beamY=-0.5132166235352209   # G4BL applies this offset to both beam and reference particle
+param -unset beamX=-8.53664519773928   # G4BL applies this offset to both beam and reference particle
+param -unset beamY=-1.8877542836287429   # G4BL applies this offset to both beam and reference particle
 param -unset kinetic_energy=0.12053575093932192*1e3
 param -unset ref_p=0.2*1e3
 
 # reference
-param -unset refBeamX=-7.09149471717852
-param -unset refBeamY=-0.5479562739819246
-param -unset refBeamXp=0.0
-param -unset refBeamYp=0.0
+param -unset refBeamX=-8.932148944336268
+param -unset refBeamY=-2.1054201345606223
+param -unset refBeamXp=0.0034935833572268668 
+param -unset refBeamYp=0.005447336039282984
 
 
 # derivative solenoids
@@ -54,10 +54,10 @@ param -unset sp1=1
 param -unset sp2=-1
 param -unset sp3=1
 param -unset sp4=-1
-param -unset n_sheets=5
+param -unset n_sheets=10
 param -unset max_z=1000
 param -unset exact_computation=0
-param -unset coil_tolerance=1e-1
+param -unset coil_tolerance=0.1
 
 # cite Mucol D8.2 final report Table 2
 param -unset inner_radius_1=285
@@ -81,20 +81,20 @@ param -unset current_2=630.6834030683402 # calculated from current*n_turns/area
 # generate a new field map if we change the magnet geometry
 param -unset do_field_map_solenoid=1
 param -unset field_map_solenoid_filename=solenoid_field_map.txt
-param -unset field_map_solenoid_current=1.0 # scale factor for the field map
+param -unset field_map_solenoid_current=0.976 # scale factor for the field map
 
 # write a 2d fieldmap (e.g. for solenoid field map generation)
 param -unset write_field_map_2d=0
 param -unset field_map_2d_filename=fieldmap_2d
-param -unset fieldmap_2d_z_spacing=5
-param -unset fieldmap_2d_r_spacing=5
+param -unset fieldmap_2d_z_spacing=5.0
+param -unset fieldmap_2d_r_spacing=5.0
 param -unset fieldmap_2d_r_max=250.0
 
 # dipoles
-param do_fieldexpr_dipole=0
+param do_fieldexpr_dipole=0 # this is buggy
 param do_field_map_dipole=1 # use this!
 param field_map_dipole_filename=dipole_field_map.txt
-param -unset cooling_dipole_field=0.15
+param -unset cooling_dipole_field=0.10648884562695177
 param -unset dp_pos=0.0 # fraction of 2000 mm cell length
 param -unset dp1=1 # polarity
 param -unset dp2=-1 # polarity
@@ -109,21 +109,21 @@ param -unset dp_fringe_length=2*$dp_fall_off
 param -unset refNoEloss=1
 param -unset refNoEfield=1
 param -unset frequency=0.704 # GHz
-param -unset rf_phase=18.840516165747395 # degree
+param -unset rf_phase=29.3859436922767 # degree
 param -unset efield=30.0 # MV/m
-param -unset iris_radius=0.5*$c_light/$frequency*$bessel_0/2/$pi
+param -unset iris_radius=0.4908380620730719*$c_light/$frequency*$bessel_0/2/$pi # 80 mm
 param -unset rf_length=188.56 # mm
 param -unset window_thickness=0.0+1e-9 # mm, must be > 0 (hence 1e-9 thickness)
-param -unset window_material=Be # WARNING! need to implement Al windows
+param -unset window_material=Al
 param -unset wall_thickness=0.4 # mm
 param -unset n_rf_cells=3
 param -unset rf_separation=5
 
 # wedge
-param -unset wedge_alignment_angle1=-90 # rotation about the beam axis; 0 means the thin edge is on the top
-param -unset wedge_alignment_angle2=90 # rotation about the beam axis; 0 means the thin edge is on the top
-param -unset wedge_angle=10.0 # opening angle for the wedge tip
-param -unset wedge_thickness=20.0 # on the beam axis
+param -unset wedge_alignment_angle1=270.0 # rotation about the beam axis; 0 means the thin edge is on the top
+param -unset wedge_alignment_angle2=90.0 # rotation about the beam axis; 0 means the thin edge is on the top
+param -unset wedge_angle=19.495796087515096 # opening angle for the wedge tip
+param -unset wedge_thickness=29.538874655047778 # on the beam axis
 param -unset wedge_offset_z=0.0 # offset along the beam axis
 param -unset wedge_offset_trans=0 # wedge axis transverse offset
 param -unset wedge_material=LITHIUM_HYDRIDE
