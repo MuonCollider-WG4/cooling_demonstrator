@@ -27,6 +27,7 @@ param -unset beamX=-6.775634547549178   # G4BL applies this offset to both beam 
 param -unset beamY=-0.5132166235352209   # G4BL applies this offset to both beam and reference particle
 param -unset kinetic_energy=0.12053575093932192*1e3
 param -unset ref_p=0.2*1e3
+param -unset beam_filename=beam_+-.txt
 
 # reference
 param -unset refBeamX=-7.09149471717852

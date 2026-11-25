@@ -24,6 +24,7 @@ param beamX=-1.1878560248810883
 param beamY=-0.9982695995571795
 param kinetic_energy=0.12053575093932192*1e3
 param ref_p=0.2*1e3
+param beam_filename=beam_++.txt
 
 #reference
 param refBeamX=-1.457815618142694
