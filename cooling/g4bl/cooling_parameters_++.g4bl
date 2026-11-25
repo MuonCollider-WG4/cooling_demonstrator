@@ -1,0 +1,112 @@
+# basic cell setup and tracking parameters
+param cell_length=2000.0
+param n_cells=25
+param n_precells=10
+param output_planes_per_cell=1
+param gap_cell_half=1000
+param output_cells=21
+param stochastics=1
+param disable=Decay
+param do_cooling=1
+param write_field_map_1d=1
+
+# physics 
+param pi=3.1415926535
+param c_light=299.792458 # mm/ns
+param bessel_0=2.405
+
+# stepping parameters
+param maxStep=9.999999999999998
+param eventTimeLimit=300
+
+# beam
+param beamX=-1.1878560248810883
+param beamY=-0.9982695995571795
+param kinetic_energy=0.12053575093932192*1e3
+param ref_p=0.2*1e3
+
+#reference
+param refBeamX=-1.457815618142694
+param refBeamY=-1.1097133416415175
+param refBeamXp=0.0
+param refBeamYp=0.0
+
+# pancake solenoids
+param -unset do_pancake_solenoid=0
+param -unset sp1=1
+param -unset sp2=-1
+param -unset sp3=1
+param -unset sp4=-1
+param -unset n_sheets=10
+param -unset max_z=1000
+param -unset exact_computation=0
+param -unset coil_tolerance=0.1
+
+param -unset inner_radius_1=285
+param -unset outer_radius_1=361.2
+param -unset pancake_length_1=12 # length of each pancake
+param -unset spacer_length_1=7.9
+param -unset sol_z_1=146 # position of inner edge of inner pancake
+param -unset n_pancakes_1=11
+param -unset current_1=403.63626421697285
+
+param -unset inner_radius_2=185
+param -unset outer_radius_2=256.7
+param -unset pancake_length_2=12 # length of each pancake
+param -unset spacer_length_2=13.7
+param -unset sol_z_2=56 # position of inner edge of inner pancake
+param -unset n_pancakes_2=3
+param -unset current_2=630.6834030683402
+
+#derivative solenoids
+param do_derivatives_solenoid=0
+param ds_b0=6.8517
+param ds_b1=1.0276
+param ds_b2=0.2165
+param ds_max_deriv=6
+
+#2d field map solenoids
+param do_field_map_solenoid=1
+param field_map_solenoid_filename=solenoid_field_map.txt
+param field_map_solenoid_current=0.976 # scale factor for the field map
+
+
+#write 2d field map
+param write_field_map_2d=0
+param field_map_2d_filename=fieldmap_2d
+param fieldmap_2d_z_spacing=5.0
+param fieldmap_2d_r_spacing=5.0
+
+# dipoles
+param cooling_dipole_field=0.239
+param dp_pos=0.025
+param dp_length=100.0
+param dp1=1
+param dp2=1
+
+# rf
+# NOTE: a cavity consists of several cells, each "pillbox" object is a cell
+param refNoEloss=1
+param refNoEfield=1
+param frequency=0.704 # GHz
+param rf_phase=29.03709976985992 # degree
+param efield=30.0 # MV/m
+param iris_radius=0.4908380620730719*$c_light/$frequency*$bessel_0/2/$pi
+param rf_length=188.56 # mm
+param window_thickness=0.0+1e-9 # mm, must be > 0 (hence 1e-9 thickness)
+param window_material=Al
+param wall_thickness=0.4 # mm
+param n_rf_cells=3
+param rf_separation=5
+
+# wedge
+param wedge_alignment_angle1=270.0 # rotation about the beam axis; 0 means the thin edge is on the top
+param wedge_alignment_angle2=270.0 # rotation about the beam axis; 0 means the thin edge is on the top
+param wedge_angle=66.4 # opening angle for the wedge tip
+param wedge_thickness=30.3 # on the beam axis
+param wedge_offset_z=0.0 # offset along the beam axis
+param wedge_offset_trans=0 # wedge axis transverse offset
+param wedge_material=LITHIUM_HYDRIDE
+param wedge_window_thickness = 0.0
+
+include cooling_lattice.g4bl

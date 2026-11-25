@@ -1,0 +1,319 @@
+# basic cell setup and tracking parameters
+param -unset cell_length=2000.0 # this is cell length assuming +--+ dipole polarity i.e. 2*solenoid period
+param -unset n_cells=60
+param -unset n_precells=10
+param -unset output_planes_per_cell=1
+param -unset gap_cell_half=5 # gap every 5 half cells
+param -unset output_cells=50
+param -unset stochastics=1
+param -unset disable=Decay
+param -unset do_cooling=1
+param -unset write_field_map_1d=1
+param -unset pipe_radius=81.6
+param -unset last_event=10000
+
+# physics parameters
+param c_light=299.792458
+param bessel_0=2.404825557695772
+param pi=3.141592653589793
+
+# stepping parameters
+param epsMax=0.01
+param -unset maxStep=10
+param -unset eventTimeLimit=300
+
+# beam
+param -unset beamX=-6.775634547549178   # G4BL applies this offset to both beam and reference particle
+param -unset beamY=-0.5132166235352209   # G4BL applies this offset to both beam and reference particle
+param -unset kinetic_energy=0.12053575093932192*1e3
+param -unset ref_p=0.2*1e3
+
+# reference
+param -unset refBeamX=-7.09149471717852
+param -unset refBeamY=-0.5479562739819246
+param -unset refBeamXp=0.0
+param -unset refBeamYp=0.0
+
+
+# derivative solenoids
+# this uses an algorithm developed by rogers but not in g4bl main branch
+# look for the derivativessolenoid code in
+# https://github.com/MuonCollider-WG4/optimisations/tree/master
+# (requires "expert" mode)
+param -unset do_derivatives_solenoid=0
+param -unset ds_b0=6.8517
+param -unset ds_b1=1.0276
+param -unset ds_b2=0.2165
+param -unset ds_b3=0.0
+param -unset ds_max_deriv=5
+
+# pancake solenoids
+# series of individual solenoid "pancake coils" that sum to make a solenoid
+param -unset do_pancake_solenoid=0
+param -unset sp1=1
+param -unset sp2=-1
+param -unset sp3=1
+param -unset sp4=-1
+param -unset n_sheets=5
+param -unset max_z=1000
+param -unset exact_computation=0
+param -unset coil_tolerance=1e-1
+
+# cite Mucol D8.2 final report Table 2
+param -unset inner_radius_1=285
+param -unset outer_radius_1=361.2
+param -unset pancake_length_1=12 # length of each pancake
+param -unset spacer_length_1=7.9
+param -unset sol_z_1=146 # position of inner edge of inner pancake
+param -unset n_pancakes_1=11
+param -unset current_1=403.63626421697285 # calculated from current*n_turns/area
+
+param -unset inner_radius_2=185
+param -unset outer_radius_2=256.7
+param -unset pancake_length_2=12 # length of each pancake
+param -unset spacer_length_2=13.7
+param -unset sol_z_2=56 # position of inner edge of inner pancake
+param -unset n_pancakes_2=3
+param -unset current_2=630.6834030683402 # calculated from current*n_turns/area
+
+# fieldmap solenoids
+# load a solenoid from a field map. ~10x quicker than pancakes, but need to
+# generate a new field map if we change the magnet geometry
+param -unset do_field_map_solenoid=1
+param -unset field_map_solenoid_filename=solenoid_field_map.txt
+param -unset field_map_solenoid_current=1.0 # scale factor for the field map
+
+# write a 2d fieldmap (e.g. for solenoid field map generation)
+param -unset write_field_map_2d=0
+param -unset field_map_2d_filename=fieldmap_2d
+param -unset fieldmap_2d_z_spacing=5
+param -unset fieldmap_2d_r_spacing=5
+param -unset fieldmap_2d_r_max=250.0
+
+# dipoles
+param do_fieldexpr_dipole=0
+param do_field_map_dipole=1 # use this!
+param field_map_dipole_filename=dipole_field_map.txt
+param -unset cooling_dipole_field=0.15
+param -unset dp_pos=0.0 # fraction of 2000 mm cell length
+param -unset dp1=1 # polarity
+param -unset dp2=-1 # polarity
+# used for fieldexpr fringe field; from rectilinear PRAB paper, although fall_off parameter there is 2*radius
+param -unset dp_length=100 # mm
+param -unset dp_radius=155 # mm, from D8.2 S4.6
+param -unset dp_fall_off=$dp_radius
+param -unset dp_fringe_length=2*$dp_fall_off
+
+# rf
+# NOTE: a cavity consists of several cells, each "pillbox" object is a cell
+param -unset refNoEloss=1
+param -unset refNoEfield=1
+param -unset frequency=0.704 # GHz
+param -unset rf_phase=18.840516165747395 # degree
+param -unset efield=30.0 # MV/m
+param -unset iris_radius=0.5*$c_light/$frequency*$bessel_0/2/$pi
+param -unset rf_length=188.56 # mm
+param -unset window_thickness=0.0+1e-9 # mm, must be > 0 (hence 1e-9 thickness)
+param -unset window_material=Be # WARNING! need to implement Al windows
+param -unset wall_thickness=0.4 # mm
+param -unset n_rf_cells=3
+param -unset rf_separation=5
+
+# wedge
+param -unset wedge_alignment_angle1=-90 # rotation about the beam axis; 0 means the thin edge is on the top
+param -unset wedge_alignment_angle2=90 # rotation about the beam axis; 0 means the thin edge is on the top
+param -unset wedge_angle=10.0 # opening angle for the wedge tip
+param -unset wedge_thickness=20.0 # on the beam axis
+param -unset wedge_offset_z=0.0 # offset along the beam axis
+param -unset wedge_offset_trans=0 # wedge axis transverse offset
+param -unset wedge_material=LITHIUM_HYDRIDE
+param -unset wedge_window_thickness = 0.0
+
+param wedge_r=$pipe_radius-1
+param do_wedge=$wedge_angle>0.001||$wedge_angle<-0.001
+if $do_wedge
+    param wedge_dh=$wedge_thickness/2.0/tan(abs($wedge_angle)/2*$pi/180) # distance from tip of wedge to midplane
+    param wedge_h=$wedge_dh+$wedge_r
+    param wedge_t1=$wedge_thickness*($wedge_h/$wedge_dh) # similar triangles
+    param wedge_t0=0.005
+    param wedge_rot=90*$wedge_angle/abs($wedge_angle)
+else
+    param wedge_t1=$wedge_thickness # similar triangles
+    param wedge_t0=$wedge_thickness
+    param wedge_h=2*$wedge_r
+    param wedge_rot=90
+endif
+param wedge_z=-$wedge_r+$wedge_h/2+$wedge_offset_trans
+
+
+param output_z_max=$cell_length*($output_cells)
+param output_z_step=$cell_length/$output_planes_per_cell
+
+physics QGSP_BIC doStochastics=$stochastics disable=$disable
+
+#################### Pancake Solenoid ##################
+if $do_pancake_solenoid
+    coil coil_pancake_1 innerRadius=$inner_radius_1 outerRadius=$outer_radius_1 length=$pancake_length_1 \
+         nSheets=$n_sheets tolerance=$coil_tolerance maxZ=$max_z exactComputation=$exact_computation
+    solenoid sol_pancake_1 coilName=coil_pancake_1 current=$current_1 kill=1 color=0,1,0
+
+    coil coil_pancake_2 innerRadius=$inner_radius_2 outerRadius=$outer_radius_2 length=$pancake_length_2 \
+         nSheets=$n_sheets tolerance=$coil_tolerance maxZ=$max_z exactComputation=$exact_computation
+    solenoid sol_pancake_2 coilName=coil_pancake_2 current=$current_2 kill=1 color=0,1,0
+endif
+
+#################### Derivatives Solenoid ##################
+if $do_derivatives_solenoid
+    derivativessolenoid derivsol color=0,1,0 cellLength=$cell_length/2 length=$cell_length maxDerivative=$ds_max_deriv maxR=$pipe_radius*2 harmonic0=$ds_b0 harmonic1=$ds_b1 harmonic2=$ds_b2 harmonic3=$ds_b3 fieldModel=fourier
+endif
+
+#################### Field Map Solenoid ##################
+if $do_field_map_solenoid
+    fieldmap solenoid_field_map filename=$field_map_solenoid_filename current=$field_map_solenoid_current
+endif
+
+#################### Wedge absorber #######################
+
+trap wedge_trap height=$wedge_h length=$wedge_r*2 upperWidth=$wedge_t0 lowerWidth=$wedge_t1 material=$wedge_material color=1,0,0
+tube wedge_beampipeinner outerRadius=$wedge_r length=450.0
+boolean op=intersection wedge wedge_beampipeinner wedge_trap rotation=Y$wedge_rot y=$wedge_z material=$wedge_material
+tube wedge_marker innerRadius=$wedge_r+1 outerRadius=$wedge_r+10 length=1 color=0.6,0.5,0.0
+
+
+#################### Markers (for visualisation) #######################
+
+tube minus innerRadius=0 outerRadius=10 length=10 kill=1 color=0,0,1
+tube plus innerRadius=0 outerRadius=10 length=10 kill=1 color=1,0,0
+
+
+################### Dipoles #######################
+# Note G4BL fringe field model is buggy; don't use it. We have two alternatives,
+# leaning on the fringe field model in Muratori et al PRSTAB 18, 2015 (thanks to
+# Ruihu)
+
+if $do_fieldexpr_dipole
+    genericbend solbend fieldWidth=1000 fieldHeight=1000 fieldLength=$dp_length \
+                   ironWidth=-1 ironHeight=-1 ironLength=-1 \
+                   openAperture=1 \
+                   By=$cooling_dipole_field kill=1 fringe=0 ironColor=1,1,1
+
+    fieldexpr fringe_left_dp1 length=$dp_fringe_length width=2*$dp_radius height=2*$dp_radius #
+    By=$dp1*$cooling_dipole_field*((1+exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off))/(1+2*exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*-z/$dp_fall_off)))
+    Bz=-$cooling_dipole_field*exp(5.5*-z/$dp_fall_off)*sin(5.5*y/$dp_fall_off)/(1+2*exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*-z/$dp_fall_off))
+    nX=2 nY=100 nZ=150
+
+    fieldexpr fringe_right_dp1 length=$dp_fringe_length
+    width=2*$dp_radius height=2*$dp_radius
+    By=$dp1*$cooling_dipole_field*((1+exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off))/(1+2*exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*z/$dp_fall_off)))
+    Bz=-$dp1*$cooling_dipole_field*exp(5.5*z/$dp_fall_off)*sin(5.5*y/$dp_fall_off)/(1+2*exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*z/$dp_fall_off)) nX=2 nY=100 nZ=150
+
+
+    fieldexpr fringe_left_dp2 length=$dp_fringe_length width=2*$dp_radius height=2*$dp_radius By=$dp2*$cooling_dipole_field*((1+exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off))/(1+2*exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*-z/$dp_fall_off))) Bz=-$dp2*$cooling_dipole_field*exp(5.5*-z/$dp_fall_off)*sin(5.5*y/$dp_fall_off)/(1+2*exp(5.5*-z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*-z/$dp_fall_off)) nX=2 nY=100 nZ=150
+
+    fieldexpr fringe_right_dp2 length=$dp_fringe_length width=2*$dp_radius height=2*$dp_radius By=$dp2*$cooling_dipole_field*((1+exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off))/(1+2*exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*z/$dp_fall_off))) Bz=-$dp2*$cooling_dipole_field*exp(5.5*z/$dp_fall_off)*sin(5.5*y/$dp_fall_off)/(1+2*exp(5.5*z/$dp_fall_off)*cos(5.5*y/$dp_fall_off)+exp(2*5.5*z/$dp_fall_off)) nX=2 nY=100 nZ=150
+endif
+
+if $do_field_map_dipole
+    fieldmap dipole_field_map filename=$field_map_dipole_filename
+endif
+
+
+################### RF Cells #######################
+param rf_spacing=$rf_length+$wall_thickness*2+$window_thickness+$rf_separation
+pillbox rf innerLength=$rf_length frequency=$frequency maxGradient=$efield phaseAcc=$rf_phase \
+win1Thick=0.0 win1OuterRadius=$iris_radius collarThick=0 collarRadialThick=0\
+winMat=$window_material irisRadius=$iris_radius+1e-6 win2Thick=0.0 wallThick=$wall_thickness pipeThick=$wall_thickness kill=1
+tube rf_window outerRadius=$iris_radius length=$window_thickness material=Be
+
+
+################## Placement - magnets ################''
+do cell_index -$n_precells $n_cells
+    if $do_fieldexpr_dipole
+        place fringe_left_dp1  z=($cell_index+0.0)*$cell_length-$dp_fringe_length/2-1e-6 rename=dipole_fringe_left_$cell_index.1
+        place fringe_right_dp1 z=($cell_index+0.0)*$cell_length+$dp_fringe_length/2 rename=dipole_fringe_left_$cell_index.1
+
+        place fringe_left_dp2  z=($cell_index+0.5)*$cell_length-$dp_fringe_length/2-1e-6 rename=dipole_fringe_left_$cell_index.2
+        place fringe_right_dp2 z=($cell_index+0.5)*$cell_length+$dp_fringe_length/2 rename=dipole_fringe_left_$cell_index.2
+    endif
+    if $do_field_map_dipole
+        place dipole_field_map z=($cell_index+0.0)*$cell_length current=$dp1*$cooling_dipole_field rename=dipole_field_map_$cell_index.1
+        place dipole_field_map z=($cell_index+0.5)*$cell_length current=$dp2*$cooling_dipole_field rename=dipole_field_map_$cell_index.2
+    endif
+
+    if $do_pancake_solenoid
+        do pancake_index 1 $n_pancakes_1
+            param pancake_offset=$sol_z_1+$pancake_length_1/2+($pancake_index-1)*($pancake_length_1+$spacer_length_1)
+            place sol_pancake_1 z=($cell_index+0.0)*$cell_length+($pancake_offset) current=$current_1*$sp1 rename=sol_$cell_index.$pancake_index.1
+            place sol_pancake_1 z=($cell_index+0.5)*$cell_length-($pancake_offset) current=$current_1*$sp2 rename=sol_$cell_index.$pancake_index.2
+            place sol_pancake_1 z=($cell_index+0.5)*$cell_length+($pancake_offset) current=$current_1*$sp3 rename=sol_$cell_index.$pancake_index.3
+            place sol_pancake_1 z=($cell_index+1.0)*$cell_length-($pancake_offset) current=$current_1*$sp4 rename=sol_$cell_index.$pancake_index.4
+        enddo
+
+        do pancake_index 1 $n_pancakes_2
+            param pancake_offset=$sol_z_2+$pancake_length_2/2+($pancake_index-1)*($pancake_length_2+$spacer_length_2)
+            place sol_pancake_2 z=($cell_index+0.0)*$cell_length+($pancake_offset) current=$current_2*$sp1 rename=sol_$cell_index.$pancake_index.1
+            place sol_pancake_2 z=($cell_index+0.5)*$cell_length-($pancake_offset) current=$current_2*$sp2 rename=sol_$cell_index.$pancake_index.2
+            place sol_pancake_2 z=($cell_index+0.5)*$cell_length+($pancake_offset) current=$current_2*$sp3 rename=sol_$cell_index.$pancake_index.3
+            place sol_pancake_2 z=($cell_index+1.0)*$cell_length-($pancake_offset) current=$current_2*$sp4 rename=sol_$cell_index.$pancake_index.4
+        enddo
+    endif
+
+    if $do_derivatives_solenoid
+        place derivsol z=($cell_index+1)*$cell_length rename=derivsol_$cell_index
+    endif
+
+    if $do_field_map_solenoid
+        place solenoid_field_map z=($cell_index+1)*$cell_length rename=field_map_$cell_index
+    endif
+
+
+    place minus z=$cell_index*$cell_length x=-500 # blue
+    place plus z=$cell_index*$cell_length x=+500 # red
+enddo
+
+################## Placement - RF & Absorbers ################
+do cell_index 0 $n_cells
+    param cell_modulo_one=($cell_index*2+1)/$gap_cell_half
+    param cell_z=$cell_index*$cell_length
+    place wedge_marker z=$cell_z-$wedge_thickness/2.0 rename=wedge_marker_a_$cell_index
+    place wedge_marker z=$cell_z+$wedge_thickness/2.0 rename=wedge_marker_b_$cell_index
+    if $do_cooling
+        if $cell_modulo_one-floor($cell_modulo_one)>1e-9 # flag for a gap cell upstream
+            place wedge z=$cell_z rotation=Z$wedge_alignment_angle1 rename=wedge$cell_index
+            do rf_index 1 $n_rf_cells
+                place rf z=$cell_z+$cell_length/4+($rf_index-0.5-$n_rf_cells/2)*$rf_spacing rename=rf_$cell_index.$rf_index
+                place rf_window z=$cell_z+$cell_length/4+($rf_index-1.0-$n_rf_cells/2)*$rf_spacing rename=rf_window_$cell_index.$rf_index
+            enddo
+            place rf_window z=$cell_z+$cell_length/4+$n_rf_cells/2*$rf_spacing rename=rf_window_$cell_index.$rf_index
+        endif
+    endif
+
+    param cell_modulo_two=($cell_index*2+2)/$gap_cell_half
+    param cell_z=($cell_index+0.5)*$cell_length
+    place wedge_marker z=$cell_z-$wedge_thickness/2.0 rename=wedge_marker_c_$cell_index
+    place wedge_marker z=$cell_z+$wedge_thickness/2.0 rename=wedge_marker_d_$cell_index
+    if $do_cooling
+        if $cell_modulo_two-floor($cell_modulo_two)>1e-9 # flag for a gap cell downstream
+            place wedge z=$cell_z rotation=Z$wedge_alignment_angle2 rename=wedge$cell_index
+            do rf_index 1 $n_rf_cells
+                place rf z=$cell_z+$cell_length/4+($rf_index-0.5-$n_rf_cells/2)*$rf_spacing rename=rf_b_$cell_index.$rf_index
+                place rf_window z=$cell_z+$cell_length/4+($rf_index-1.0-$n_rf_cells/2)*$rf_spacing rename=rf_window_b_$cell_index.$rf_index
+            enddo
+            place rf_window z=$cell_z+$cell_length/4+$n_rf_cells/2*$rf_spacing rename=rf_window_b_$cell_index.$rf_index
+        endif
+    endif
+enddo
+
+################## Input beam #################################
+reference particle=mu+ beamZ=0.0 referenceMomentum=$ref_p beamX=$refBeamX beamY=$refBeamY beamXp=$refBeamXp beamYp=$refBeamYp noEfield=$refNoEfield noEloss=$refNoEloss
+beam ascii file=beam.tmp beamZ=0.0 beamX=$beamX beamY=$beamY lastEvent=$last_event # user provided file with particle data
+
+################## Output #################################
+zntuple output file=output format=FOR009.DAT zloop=0:$output_z_max:$output_z_step referenceParticle=1
+if $write_field_map_1d
+    fieldntuple field_out_1d format=ascii filename=fieldmap.dat z=0,$cell_length,10
+endif
+
+if $write_field_map_2d
+    fieldntuple field_out_2d format=ascii filename=$field_map_2d_filename z=0,$cell_length,$fieldmap_2d_z_spacing x=0,$fieldmap_2d_r_max,$fieldmap_2d_r_spacing
+endif

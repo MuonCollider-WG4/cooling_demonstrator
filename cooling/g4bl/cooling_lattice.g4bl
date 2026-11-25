@@ -3,14 +3,13 @@ param -unset cell_length=2000.0 # this is cell length assuming +--+ dipole polar
 param -unset n_cells=60
 param -unset n_precells=10
 param -unset output_planes_per_cell=1
-param -unset gap_cell_half=1000 # gap every 5 half cells
+param -unset gap_cell_half=1000 # gap every N half cells
 param -unset output_cells=50
 param -unset stochastics=1
 param -unset disable=Decay
 param -unset do_cooling=1
 param -unset write_field_map_1d=1
 param -unset pipe_radius=81.6
-param -unset last_event=10000
 
 # physics parameters
 param pi=3.141592653589793
@@ -23,6 +22,7 @@ param -unset eventTimeLimit=300
 param epsMax=0.01
 
 # beam
+param -unset beam_filename=beam.tmp
 param -unset beamX=-8.53664519773928   # G4BL applies this offset to both beam and reference particle
 param -unset beamY=-1.8877542836287429   # G4BL applies this offset to both beam and reference particle
 param -unset kinetic_energy=0.12053575093932192*1e3
@@ -118,6 +118,10 @@ param -unset window_material=Al
 param -unset wall_thickness=0.4 # mm
 param -unset n_rf_cells=3
 param -unset rf_separation=5
+# gap matching
+param -unset rf_gap_delta_phase=0.0
+param -unset rf_gap_delta_efield=0.0
+
 
 # wedge
 param -unset wedge_alignment_angle1=270.0 # rotation about the beam axis; 0 means the thin edge is on the top
@@ -221,9 +225,14 @@ endif
 ################### RF Cells #######################
 param rf_spacing=$rf_length+$wall_thickness*2+$window_thickness+$rf_separation
 pillbox rf innerLength=$rf_length frequency=$frequency maxGradient=$efield phaseAcc=$rf_phase \
-win1Thick=0.0 win1OuterRadius=$iris_radius collarThick=0 collarRadialThick=0\
-winMat=$window_material irisRadius=$iris_radius+1e-6 win2Thick=0.0 wallThick=$wall_thickness pipeThick=$wall_thickness kill=1
+    win1Thick=0.0 win1OuterRadius=$iris_radius collarThick=0 collarRadialThick=0\
+    winMat=$window_material irisRadius=$iris_radius+1e-6 win2Thick=0.0 wallThick=$wall_thickness pipeThick=$wall_thickness kill=1
 tube rf_window outerRadius=$iris_radius length=$window_thickness material=Be
+
+pillbox rf_match innerLength=$rf_length frequency=$frequency maxGradient=$efield+$rf_gap_delta_efield phaseAcc=$rf_phase+$rf_gap_delta_phase \
+    win1Thick=0.0 win1OuterRadius=$iris_radius collarThick=0 collarRadialThick=0\
+    winMat=$window_material irisRadius=$iris_radius+1e-6 win2Thick=0.0 wallThick=$wall_thickness pipeThick=$wall_thickness kill=1
+
 
 
 ################## Placement - magnets ################''
@@ -306,7 +315,7 @@ enddo
 
 ################## Input beam #################################
 reference particle=mu+ beamZ=0.0 referenceMomentum=$ref_p beamX=$refBeamX beamY=$refBeamY beamXp=$refBeamXp beamYp=$refBeamYp noEfield=$refNoEfield noEloss=$refNoEloss
-beam ascii file=beam.tmp beamZ=0.0 beamX=$beamX beamY=$beamY lastEvent=$last_event # user provided file with particle data
+beam ascii file=$beam_filename beamZ=0.0 beamX=$beamX beamY=$beamY # user provided file with particle data
 
 ################## Output #################################
 zntuple output file=output format=FOR009.DAT zloop=0:$output_z_max:$output_z_step referenceParticle=1
